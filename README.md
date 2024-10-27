@@ -29,9 +29,9 @@ Set a project location and click Finish.
 * Use ```File > Open Folder...``` to open an existing PlatformIO project.
 ### 4. Project Structure
 * platformio.ini: Main configuration file where you define environments, platforms, and dependencies.
-* src/: Folder where your source code (main.cpp or .ino files) goes.
-* lib/: Store external libraries here.
-* .pio/: Temporary build files (automatically managed).
+* ```src/```: Folder where your source code (main.cpp or .ino files) goes.
+* ```lib/```: Store external libraries here.
+* ```.pio/```: Temporary build files (automatically managed).
 ### 5. Building and Uploading Code
 1. Open the Command Palette (Ctrl + Shift + P).
 2. Search for PlatformIO: Build to compile your code.
