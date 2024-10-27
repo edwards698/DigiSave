@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <WiFi.h>
-#include <HTTPClient.h> // For HTTP requests
+#include <HTTPClient.h>
 
 // Wi-Fi Credentials
 const char* ssid = "Mr.Boring";
@@ -8,14 +8,14 @@ const char* password = "##ONETWOTHREE45678";
 
 // Firebase Firestore project details
 const String FIREBASE_HOST = "https://firestore.googleapis.com/v1/projects/update-a33ce/databases/(default)/documents";
-const String API_KEY = "AIzaSyCnkDqjRK3RERg4RbOpGEY7JMDDTzqUHvw"; // Replace with your Firebase API key
+const String API_KEY = "AIzaSyCnkDqjRK3RERg4RbOpGEY7JMDDTzqUHvw";
 const String COLLECTION_PATH = "/test-collection"; // Firestore collection path
 const String DOCUMENT_ID = "test-document"; // Firestore document ID
 
 int counter = 0; // Initialize counter to 0
 
 // Function prototype declaration
-void sendDataToFirestore();  
+void sendDataToFirestore();
 
 void setup() {
   // Start serial communication and connect to Wi-Fi
@@ -60,7 +60,7 @@ void loop() {
 void sendDataToFirestore() {
   HTTPClient http;  // Create an HTTP client object
 
-  // Correct Firestore REST API URL for creating or updating a document
+  // Firestore REST API URL for creating or updating a document
   String url = FIREBASE_HOST + COLLECTION_PATH + "/" + DOCUMENT_ID + "?key=" + API_KEY;
   Serial.println("Firestore URL: " + url);  // Log the URL for debugging
 
@@ -69,8 +69,11 @@ void sendDataToFirestore() {
   // Set content type to JSON
   http.addHeader("Content-Type", "application/json");
 
-  // JSON payload to send, with incremented counter value
-  String jsonPayload = "{ \"fields\": { \"ssid\": {\"stringValue\": \"Mr.Boring\"}, \"message\": {\"stringValue\": \"Hello from ESP32, you just pressed a button! Count: " + String(counter) + "\" } } }";
+  // Get current timestamp using millis()
+  unsigned long timestamp = millis();
+
+  // JSON payload to send, including timestamp and incremented counter value
+  String jsonPayload = "{ \"fields\": { \"ssid\": {\"stringValue\": \"Mr.Boring\"}, \"message\": {\"stringValue\": \"USD: " + String(counter) + "\" }, \"timestamp\": {\"integerValue\": \"" + String(timestamp) + "\" } } }";
   Serial.println("Sending JSON Payload: " + jsonPayload);  // Log JSON for debugging
 
   // Send HTTP PATCH request
