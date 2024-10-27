@@ -32,16 +32,23 @@ void setup() {
 }
 
 void loop() {
-  // Check Wi-Fi status
-  if (WiFi.status() == WL_CONNECTED) {
-    sendDataToFirestore(); // Send data to Firestore
-  } else {
-    Serial.println("WiFi disconnected! Reconnecting...");
-    WiFi.disconnect();
-    delay(1000);
-    WiFi.begin(ssid, password);
+  // Check if there's data available in the Serial buffer
+  if (Serial.available() > 0) {
+    char inputChar = Serial.read(); // Read the incoming character
+
+    // Check if the input character is 'j'
+    if (inputChar == 'j') {
+      // Ensure Wi-Fi is connected before sending data
+      if (WiFi.status() == WL_CONNECTED) {
+        sendDataToFirestore(); // Send data to Firestore
+      } else {
+        Serial.println("WiFi disconnected! Reconnecting...");
+        WiFi.disconnect();
+        delay(1000);
+        WiFi.begin(ssid, password);
+      }
+    }
   }
-  delay(5000); // Wait 5 seconds before sending the next request
 }
 
 // Definition of sendDataToFirestore function
@@ -62,13 +69,13 @@ void sendDataToFirestore() {
     {
       "fields": {
         "ssid": {"stringValue": "Mr.Boring"},
-        "message": {"stringValue": "Hello from Arduino! and Edward"}
+        "message": {"stringValue": Hello from ESP32 you just pressed a button 123-567}
       }
     }
   )";
   Serial.println("Sending JSON Payload: " + jsonPayload);  // Log JSON for debugging
 
-  // Send HTTP POST request
+  // Send HTTP PATCH request
   int httpResponseCode = http.PATCH(jsonPayload); // Using PATCH to create or update document
 
   // Handle the response
