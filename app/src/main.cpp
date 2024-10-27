@@ -12,6 +12,8 @@ const String API_KEY = "AIzaSyCnkDqjRK3RERg4RbOpGEY7JMDDTzqUHvw"; // Replace wit
 const String COLLECTION_PATH = "/test-collection"; // Firestore collection path
 const String DOCUMENT_ID = "test-document"; // Firestore document ID
 
+int counter = 0; // Initialize counter to 0
+
 // Function prototype declaration
 void sendDataToFirestore();  
 
@@ -38,6 +40,9 @@ void loop() {
 
     // Check if the input character is 'j'
     if (inputChar == 'j') {
+      counter++; // Increment counter
+      Serial.println("Counter incremented to: " + String(counter));
+
       // Ensure Wi-Fi is connected before sending data
       if (WiFi.status() == WL_CONNECTED) {
         sendDataToFirestore(); // Send data to Firestore
@@ -64,15 +69,8 @@ void sendDataToFirestore() {
   // Set content type to JSON
   http.addHeader("Content-Type", "application/json");
 
-  // JSON payload to send
-  String jsonPayload = R"(
-    {
-      "fields": {
-        "ssid": {"stringValue": "Mr.Boring"},
-        "message": {"stringValue": Hello from ESP32 you just pressed a button 123-567}
-      }
-    }
-  )";
+  // JSON payload to send, with incremented counter value
+  String jsonPayload = "{ \"fields\": { \"ssid\": {\"stringValue\": \"Mr.Boring\"}, \"message\": {\"stringValue\": \"Hello from ESP32, you just pressed a button! Count: " + String(counter) + "\" } } }";
   Serial.println("Sending JSON Payload: " + jsonPayload);  // Log JSON for debugging
 
   // Send HTTP PATCH request
