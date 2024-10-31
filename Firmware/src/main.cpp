@@ -1,9 +1,16 @@
 #include <Wire.h>
+//include keypad library in the directory called lib
 #include <SPI.h>
+//include MFRC522 library in the directory called lib
 #include <MFRC522.h>
+//include Adafruit_GFX and Adafruit_SSD1306 library in the directory called lib
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+//include LiquidCrystal_I2C library in the directory called lib
+#include <LiquidCrystal_I2C.h>
+//include keypad library in the directory called lib
 #include <Keypad.h>
+//include wifi and HTTPClient library in the directory called lib
 #include <WiFi.h>
 #include <HTTPClient.h>
 
