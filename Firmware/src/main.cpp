@@ -23,7 +23,7 @@
 #define SCREEN_HEIGHT 64
 #define OLED_ADDRESS 0x3C  // Default I2C address
 
-// I2C pins for ESP32
+// I2C pins for ESP32 to OLED
 #define I2C_SDA 2
 #define I2C_SCL 15
 
@@ -65,6 +65,9 @@ const char* userNames[] = {"Edward Phiri", "Obrey Muchena", "Ceicilia Phiri"};
 const int secretCodes[] = {1234, 5678, 9101};
 const int numKnownCards = 3;
 
+// Set the I2C address of the LCD, typically 0x27 or 0x3F
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // 16 columns and 2 rows
+
 void displayMessage(String message);
 String getUIDString();
 int getUserIndex();
@@ -77,6 +80,21 @@ int extractAmount(String jsonResponse);
 
 void setup() {
   Serial.begin(9600);
+
+  // Initialize I2C communication with GPIO 4 as SDA and GPIO 5 as SCL
+  Wire.begin(4, 5);  // SDA = GPIO 4, SCL = GPIO 5
+  // Initialize the LCD
+  lcd.init();
+  lcd.backlight();  // Turn on the backlight
+
+  // Print a message on the LCD
+  lcd.setCursor(4, 0);  // Column 0, Row 0
+  lcd.print("DigiSave");
+  // Print a message on the LCD
+  lcd.setCursor(3, 1);  // Column 0, Row 0
+  lcd.print("Save Smart");
+  delay(3000);
+  lcd.clear();
 
   WiFi.begin(ssid, password);
   Serial.println("Connecting to " + String(ssid));
@@ -96,7 +114,10 @@ void setup() {
     while (true);
   }
 
-  displayMessage("Scan a card...");
+
+  displayMessage("Scan a card...");//display the message on the OLED screen
+  lcd.setCursor(0,0);
+  lcd.print("Scan a card...");
 }
 
 void loop() {
@@ -127,12 +148,17 @@ void loop() {
 }
 
 void displayMessage(String message) {
+  //OLED
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0, 0);
   display.println(message);
   display.display();
+  //LCD
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print(message);
 }
 
 String getUIDString() {
@@ -162,7 +188,14 @@ bool validateCode(int userIndex) {
   String correctCode = String(secretCodes[userIndex]);
   String enteredCode = "";
 
-  displayMessage("Enter 4-digit code:");
+  displayMessage("Enter 4-digit code:");;// if using an OLED the the message on the lCD display 
+
+  lcd.clear();
+  lcd.setCursor(3,0);//setting the cursor position on the number 3rd position
+  lcd.print("Enter Your");// if using an LCD dispaly 16,2 the the message on the lCD display 
+  lcd.setCursor(2,1);//set the position on the second row and cursor postion in the 2nd
+  lcd.print("4 Digit Pin");// if using an LCD dispaly 16,2 the the message on the lCD display 
+
   while (enteredCode.length() < 4) {
     char key = keypad.getKey();
     if (key) {
@@ -193,14 +226,24 @@ void displayAccessStatus(bool granted) {
 void promptForAmount() {
   String amount = "";
   displayMessage("Enter amount ($):");
+  lcd.clear();//Clear
+  lcd.setCursor(0,0);
+  lcd.print("Enter amount ($):");
+
 
   while (true) {
     char key = keypad.getKey();
     if (key) {
       if (key == '#') {
         if (amount.isEmpty()) {
+          //OLED 
           displayMessage("Amount cannot be empty");
+          //LCD Display
+          lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("Amount cannot be empty");
           delay(1000);
+          lcd.clear();
           displayMessage("Enter amount ($):");
           continue;
         }
@@ -208,8 +251,13 @@ void promptForAmount() {
         if (WiFi.status() == WL_CONNECTED) {
           sendDataToFirestore(amount);
 
-          // Display success message after sending data
-          displayMessage("Amount Banked\nSuccess!");
+          // Display success message after sending data on the OLED 
+          displayMessage("Amount Banked");
+          // Display success message after sending data on the LCD display
+          lcd.setCursor(0,0);
+          lcd.print("Amount Banked");
+          lcd.setCursor(3,1);
+          lcd.print("Success!");
           delay(6000);
           displayMessage("Scan a card...");
         } else {
