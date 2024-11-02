@@ -49,11 +49,28 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 const char* ssid = "Mr.Boring";
 const char* password = "##ONETWOTHREE45678";
 
+//Wifi Symbol
+byte wifiSymbol[] = {
+  B00000,
+  B00100,
+  B01110,
+  B11111,
+  B01110,
+  B00100,
+  B00100,
+  B00100
+};
+
+
 // Firebase Firestore project details
 const String FIREBASE_HOST = "https://firestore.googleapis.com/v1/projects/update-a33ce/databases/(default)/documents";
 const String API_KEY = "AIzaSyCnkDqjRK3RERg4RbOpGEY7JMDDTzqUHvw";
+const String COLLECTION_PATH = "/pockets";
+const String DOCUMENT_ID = "main-pocket";
+/*
 const String COLLECTION_PATH = "/test-collection";
 const String DOCUMENT_ID = "test-document";
+*/
 
 // Known card UIDs and associated names and codes
 const byte knownUIDs[][4] = {
@@ -116,7 +133,16 @@ void setup() {
 
 
   displayMessage("Scan a card...");//display the message on the OLED screen
-  lcd.setCursor(0,0);
+  //lcd.setCursor(0,0);
+  //lcd.print("Scan a card...");
+  //Wifi Symbol
+  //lcd.print("WIFI-GOOD");
+  lcd.createChar(0, wifiSymbol);
+  lcd.home();
+  lcd.write(0);
+  lcd.setCursor(1,0);
+  lcd.print(" Wifi Stable");
+  lcd.setCursor(0,1);
   lcd.print("Scan a card...");
 }
 
@@ -132,6 +158,15 @@ void loop() {
   int userIndex = getUserIndex();
   if (userIndex != -1) {
     displayMessage("Hello " + String(userNames[userIndex]) + "\nEnter 4-digit code:");
+
+    lcd.clear();
+    lcd.setCursor(5,0);
+    lcd.print("Hello");
+    lcd.setCursor(0,1);
+    lcd.print(String(userNames[userIndex]));
+    delay(2000);
+
+    //If access is granted will proceed to another step 
     bool accessGranted = validateCode(userIndex);
     displayAccessStatus(accessGranted);
 
@@ -139,7 +174,7 @@ void loop() {
       promptForAmount();
     }
   } else {
-    displayMessage("Unknown card\nUID: " + uidString);
+    displayMessage("Unknown\nUID: " + uidString);
   }
 
   rfid.PICC_HaltA();
@@ -215,13 +250,44 @@ bool validateCode(int userIndex) {
 void displayAccessStatus(bool granted) {
   if (granted) {
     displayMessage("Access Granted");
+    lcd.clear();
+    lcd.setCursor(1,0);
+    lcd.print("Pin OK");
     delay(3000);
   } else {
     displayMessage("Access Denied");
+    lcd.clear();
+    lcd.setCursor(1,1);
+    lcd.print("Pin Denied");
     delay(2000);
   }
   displayMessage("Scan a card...");
 }
+
+
+
+/*
+String formatAmount(String rawAmount) {
+  
+  if (rawAmount.length() < 3) rawAmount = "00" + rawAmount;
+  
+  String integerPart = rawAmount.substring(0, rawAmount.length() - 2);
+  String decimalPart = rawAmount.substring(rawAmount.length() - 2);
+  
+  String formattedInteger = "";
+  int count = 0;
+  for (int i = integerPart.length() - 1; i >= 0; i--) {
+    formattedInteger = integerPart[i] + formattedInteger;
+    count++;
+    if (count == 3 && i != 0) {
+      formattedInteger = "," + formattedInteger;
+      count = 0;
+    }
+  }
+  
+  return "ZMW " + formattedInteger + "." + decimalPart;
+}
+*/
 
 void promptForAmount() {
   String amount = "";
@@ -254,12 +320,24 @@ void promptForAmount() {
           // Display success message after sending data on the OLED 
           displayMessage("Amount Banked");
           // Display success message after sending data on the LCD display
-          lcd.setCursor(0,0);
+          lcd.clear();
+          lcd.setCursor(1,0);
           lcd.print("Amount Banked");
-          lcd.setCursor(3,1);
+          lcd.setCursor(4,1);
           lcd.print("Success!");
           delay(6000);
+          //Asing Ususer to rescan the card if want to make a deposit
           displayMessage("Scan a card...");
+          lcd.clear();
+          lcd.setCursor(0,0);
+          //lcd.print("WIFI-GOOD");
+          lcd.createChar(0, wifiSymbol);
+          lcd.home();
+          lcd.write(0);
+          lcd.setCursor(1,0);
+          lcd.print("-Wifi Stable");
+          lcd.setCursor(0,1);
+          lcd.print("Scan a card...");
         } else {
           reconnectWiFi();
         }
