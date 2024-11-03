@@ -24,16 +24,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String? selectedPocket;
-  final List<String> pockets = ['Rentals', 'Holiday', 'Expense'];
-  final Map<String, double> pocketBalances = {
-    'Rentals': 1200.00,
-    'Holiday': 600.50,
-    'Expense': 441.00,
-  };
-
-  double get selectedPocketBalance {
-    return pocketBalances[selectedPocket] ?? 441.00;
-  }
+  final List<Map<String, dynamic>> pockets = [
+    {'name': 'Main Pocket', 'balance': 441.00},
+    {'name': 'Savings Pocket', 'balance': 150.00},
+    {'name': 'Expense Pocket', 'balance': 75.50},
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -45,92 +40,125 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              // Top Row with Profile Picture and Search Icon
+              const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     backgroundImage: NetworkImage(
-                        'https://via.placeholder.com/150'), // Placeholder image
+                        'https://www.example.com/profile.jpg'), // Replace with actual image
                     radius: 20,
                   ),
-                  const Icon(Icons.search, size: 28),
+                  Icon(Icons.search, size: 28),
                 ],
               ),
               const SizedBox(height: 24),
 
-              // Wrap balance card in RepaintBoundary to reduce redraws
-              RepaintBoundary(
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color.fromARGB(31, 8, 8, 8),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
+              // Balance Card
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color.fromARGB(31, 8, 8, 8),
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Select Pocket',
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.grey,
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ExpansionTile(
-                        title: Text(selectedPocket ?? 'Main pocket'),
-                        children: pockets.map((pocket) {
-                          return ListTile(
-                            title: Text(
-                                '$pocket - \$${pocketBalances[pocket]!.toStringAsFixed(2)}'),
-                            onTap: () {
-                              setState(() {
-                                selectedPocket = pocket;
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    // ExpansionTile for the pockets
+                    ExpansionTile(
+                      title: Text(selectedPocket ?? 'Select a pocket'),
+                      children: pockets.map((pocket) {
+                        return ListTile(
+                          title: Text('${pocket['name']}'),
+                          subtitle: Text('\$${pocket['balance'].toStringAsFixed(2)}'),
+                          onTap: () {
+                            setState(() {
+                              selectedPocket = pocket['name'];
+                            });
+                            // Optionally, close the expansion tile when a pocket is selected
+                            Navigator.pop(context);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    if (selectedPocket != null) ...[
                       Text(
-                        '\$${selectedPocketBalance.toStringAsFixed(2)}',
+                        'Selected Pocket: $selectedPocket',
                         style: const TextStyle(
-                          fontSize: 32,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            '*6749',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              Image.asset(
-                                'assets/icons/visa.png', // Path to local asset
-                                width: 32,
-                                height: 32,
-                              ),
-                              const SizedBox(width: 8),
-                              Image.asset(
-                                'assets/icons/master.png', // Path to local asset
-                                width: 32,
-                                height: 32,
-                              ),
-                            ],
-                          ),
-                        ],
+                      Text(
+                        'Balance: \$${pockets.firstWhere((pocket) => pocket['name'] == selectedPocket)['balance'].toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
-                  ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          '*6749',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Image.asset(
+                              'assets/icons/visa.png', // Path to your local asset
+                              width: 32,
+                              height: 32,
+                            ),
+                            const SizedBox(width: 8),
+                            Image.asset(
+                              'assets/icons/master.png', // Path to your local asset for MasterCard
+                              width: 32,
+                              height: 32,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
+
               const SizedBox(height: 24),
+
+              // Add Pocket Button
+              ElevatedButton(
+                onPressed: () {
+                  // Logic to add a new pocket
+                  // You can show a dialog or navigate to another screen
+                },
+                child: const Text('Add Pocket'),
+              ),
+
+              const SizedBox(height: 24),
+
               // Add and Send Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -140,8 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: ElevatedButton.styleFrom(
                       shape: const StadiumBorder(),
                       backgroundColor: Colors.grey[300],
-                      padding: const EdgeInsets.symmetric(horizontal: 44, vertical: 12),
-                      elevation: 0, // Set elevation to a lower value
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
                     child: const Text("Add", style: TextStyle(color: Colors.black)),
                   ),
@@ -150,14 +177,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: ElevatedButton.styleFrom(
                       shape: const StadiumBorder(),
                       backgroundColor: Colors.grey[300],
-                      padding: const EdgeInsets.symmetric(horizontal: 44, vertical: 12),
-                      elevation: 0, // Set elevation to a lower value
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
                     child: const Text("Send", style: TextStyle(color: Colors.black)),
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
               const Divider(),
               // Transactions Title
