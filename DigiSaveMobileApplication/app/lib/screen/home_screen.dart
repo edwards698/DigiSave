@@ -208,14 +208,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: const [
                     TransactionItem(
                       icon: Icons.directions_car,
-                      title: 'Lyft',
+                      title: 'Digi-Save Card',
                       subtitle: '12:20',
                       amount: '\$10.34',
                       iconColor: Colors.pink,
                     ),
                     TransactionItem(
                       icon: Icons.local_cafe,
-                      title: 'Starbucks',
+                      title: 'Mobile',
                       subtitle: '11:31',
                       amount: '\$7.40',
                       iconColor: Colors.green,
@@ -262,10 +262,18 @@ class TransactionItem extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                backgroundColor: iconColor,
-                child: Icon(icon, color: Colors.white),
+            CircleAvatar(
+              backgroundColor: Colors.transparent, // Remove background if you want only the image to be visible
+              radius: 20, // Adjust radius as needed
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/icons/money-bag.png', // Path to your custom image asset
+                  fit: BoxFit.cover, // Ensures the image covers the entire CircleAvatar area
+                  width: 24, // Adjust width as needed
+                  height: 24, // Adjust height as needed
+                ),
               ),
+            ),
               const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
