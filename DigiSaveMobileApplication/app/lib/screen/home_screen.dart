@@ -1,3 +1,4 @@
+import 'package:app/screen/bottom_nevigation.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -23,6 +24,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0; // Index for the selected bottom navigation item
   String? selectedPocket;
   final List<String> pockets = ['Rentals', 'Holiday', 'Expense'];
   final Map<String, double> pocketBalances = {
@@ -33,6 +35,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   double get selectedPocketBalance {
     return pocketBalances[selectedPocket] ?? 441.00;
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
@@ -48,17 +56,24 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const CircleAvatar(
-                    backgroundImage: NetworkImage(
-                        'https://via.placeholder.com/150'), // Placeholder image
-                    radius: 20,
+                  Row(
+                    children: [
+                      const CircleAvatar(
+                        backgroundImage: AssetImage('assets/images/Mr._Krabs.png'), // Path to local asset
+                        radius: 20,
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                   ),
-                  const Icon(Icons.search, size: 28),
+                  Image.asset(
+                    'assets/icons/setting.png', // Path to local asset
+                    width: 24,
+                    height: 24,
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
 
-              // Wrap balance card in RepaintBoundary to reduce redraws
               RepaintBoundary(
                 child: Container(
                   padding: const EdgeInsets.all(24),
@@ -66,22 +81,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: const [
-                      BoxShadow(
-                        color: Color.fromARGB(31, 8, 8, 8),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
+                      // BoxShadow settings
                     ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ExpansionTile(
-                        title: Text(selectedPocket ?? 'Main pocket'),
+                        title: Text(
+                          selectedPocket ?? 'Main Pocket',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            color: Color.fromARGB(255, 70, 130, 180),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         children: pockets.map((pocket) {
                           return ListTile(
                             title: Text(
-                                '$pocket - \$${pocketBalances[pocket]!.toStringAsFixed(2)}'),
+                              '$pocket - \$${pocketBalances[pocket]!.toStringAsFixed(2)}',
+                            ),
                             onTap: () {
                               setState(() {
                                 selectedPocket = pocket;
@@ -90,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         }).toList(),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
                       Text(
                         '\$${selectedPocketBalance.toStringAsFixed(2)}',
                         style: const TextStyle(
@@ -130,8 +149,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 24),
-              // Add and Send Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -141,9 +160,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       shape: const StadiumBorder(),
                       backgroundColor: Colors.grey[300],
                       padding: const EdgeInsets.symmetric(horizontal: 44, vertical: 12),
-                      elevation: 0, // Set elevation to a lower value
+                      elevation: 0,
                     ),
-                    child: const Text("Add", style: TextStyle(color: Colors.black)),
+                    child: const Text("Get", style: TextStyle(color: Colors.black)),
                   ),
                   ElevatedButton(
                     onPressed: () {},
@@ -151,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       shape: const StadiumBorder(),
                       backgroundColor: Colors.grey[300],
                       padding: const EdgeInsets.symmetric(horizontal: 44, vertical: 12),
-                      elevation: 0, // Set elevation to a lower value
+                      elevation: 0,
                     ),
                     child: const Text("Send", style: TextStyle(color: Colors.black)),
                   ),
@@ -160,17 +179,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 24),
               const Divider(),
-              // Transactions Title
               const Text(
-                "Today",
+                "Recent transactions",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
+                  color: Colors.grey,
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Transactions List
               Expanded(
                 child: ListView(
                   children: const [
@@ -194,6 +212,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: CustomBottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
       ),
     );
   }
