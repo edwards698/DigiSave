@@ -22,15 +22,15 @@ class CustomBottomNavigationBar extends StatelessWidget {
       items: [
         BottomNavigationBarItem(
           icon: ImageIcon(
-            AssetImage('assets/icons/pay.png'),
-          ),
-          label: 'Payment',
-        ),
-        BottomNavigationBarItem(
-          icon: ImageIcon(
             AssetImage('assets/icons/wallet.png'),
           ),
           label: 'Pockets',
+        ),
+        BottomNavigationBarItem(
+          icon: ImageIcon(
+            AssetImage('assets/icons/pay.png'),
+          ),
+          label: 'Payments',
         ),
         BottomNavigationBarItem(
           icon: ImageIcon(

@@ -58,13 +58,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Row(
                     children: [
+                     
+                      const SizedBox(width: 8), // Space between the name and profile picture
+
+                      // Profile Picture
                       const CircleAvatar(
                         backgroundImage: AssetImage('assets/images/Mr._Krabs.png'), // Path to local asset
                         radius: 20,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
+                      // User Name Text
+                      const Text(
+                        'Edward Phiri', // Replace with the user's name or a variable
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
                     ],
                   ),
+
                   Image.asset(
                     'assets/icons/setting.png', // Path to local asset
                     width: 24,
