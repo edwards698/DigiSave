@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:digi/screens/bottom_navigation.dart';
 //Google fonts popins
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,6 +33,42 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0; // Index for the selected bottom navigation item
   String? selectedPocket;
+
+  // Balance fetched from Firestore
+  double _fetchedBalance = 441.00; // Default balance
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBalanceFromFirestore();
+  }
+
+  // Fetch balance from Firestore
+  Future<void> _fetchBalanceFromFirestore() async {
+    FirebaseFirestore.instance
+        .collection('pockets')
+        .doc('main-pocket')
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.exists) {
+        final message = snapshot.get('message') as String;
+        print("Fetched message from Firestore: $message"); // Debugging line
+
+        // Extracting the balance from the message
+        final balanceString = message.split(': ')[1];
+        final balance = double.tryParse(balanceString) ?? 441.00;
+
+        print("Parsed balance from Firestore: $balance"); // Debugging line
+
+        setState(() {
+          _fetchedBalance = balance;
+        });
+      } else {
+        print("Document does not exist in Firestore"); // Debugging line
+      }
+    });
+  }
+
   final List<String> pockets = ['Rentals', 'Holiday', 'Expense'];
   final Map<String, double> pocketBalances = {
     'Rentals': 1200.00,
@@ -39,8 +76,9 @@ class _HomeScreenState extends State<HomeScreen> {
     'Expense': 441.00,
   };
 
+  // Return balance fetched from Firestore
   double get selectedPocketBalance {
-    return pocketBalances[selectedPocket] ?? 441.00;
+    return _fetchedBalance;
   }
 
   void _onItemTapped(int index) {
@@ -119,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: pockets.map((pocket) {
                           return ListTile(
                             title: Text(
-                              '$pocket - \$${pocketBalances[pocket]!.toStringAsFixed(2)}',
+                              "$pocket - \$${selectedPocketBalance.toStringAsFixed(2)}",
                             ),
                             onTap: () {
                               setState(() {
