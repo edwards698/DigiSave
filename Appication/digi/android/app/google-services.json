@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "336533887938",
+    "project_id": "update-a33ce",
+    "storage_bucket": "update-a33ce.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:336533887938:android:8f70622ccc9a3ab900545b",
+        "android_client_info": {
+          "package_name": "com.example.digi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNOQUmuae90sBIyRs3byxp8ImEk1j04OI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
