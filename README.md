@@ -1,4 +1,39 @@
 # DigiSave
+DigiSave is a modern savings solution that combines the convenience of a mobile app with an innovative hardware device, offering users a way to manage savings. With DigiSave, users can set financial goals, create multiple savings pockets, and deposit money daily with precision. The system ensures data integrity using ```ESP32``` for connectivity and ```Firebase``` for secure data storage. Additionally, the DigiSave app built with ```C++```, ```Dart```, ```Kotlin```, ```Java``` and ```Swift``` with ```Flutter framework``` provides real-time updates, making savings management intuitive and efficient and.
+
+## Features
+### 1. Multi-Pocket Savings
+* Users can create different savings pockets for individual goals (e.g., “```Holiday Fund```,” “```Emergency Savings```, ```Holiday Savings```”).
+* Each pocket has a target amount to track progress visually in the app and on the LCD display.
+
+### 2. Daily Savings Management with Target Goals
+* Users can set daily deposit goals using the hardware device and assign how much they plan to save each day.
+* Real-time tracking of savings ensures progress toward achieving personal financial goals.
+
+### 3. Mobile App Integration (Flutter App)
+ ####  The DigiSave app provides a sleek and interactive user interface to:
+
+*  View pocket balances and savings history.
+* Track contributions in real time.
+* Manage personal accounts using User ID or Card ID.
+#### Users get notifications about transactions and savings milestones.
+
+### 4. Secure Transactions with ESP32 & Firebase
+* ESP32 microcontroller handles all Wi-Fi-enabled transactions, sending real-time data to Firebase for secure storage and user authentication.
+
+* Every deposit is linked to a unique User ID or Card ID, ensuring accurate tracking of who made the contribution.
+
+### 5. Hardware Components for User Input & Interaction
+* ```LCD Display```: Provides visual feedback, showing the amount deposited and savings progress for each pocket.
+Keypad Input: Users enter deposit amounts manually.
+* ```Potentiometer```: Adjust values or navigate through pocket options and settings.
+* ```LED Indicators```: Show the status of transactions (e.g., Green for success, Red for error).
+
+
+
+
+
+
 ## PlatformIO Extension in VS Code
 ### 1. Install PlatformIO
 1. Open VS Code.

@@ -1,5 +1,7 @@
-import 'package:app/screen/bottom_nevigation.dart';
 import 'package:flutter/material.dart';
+import 'package:app/screen/bottom_nevigation.dart';
+//Google fonts popins
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,6 +13,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        textTheme: GoogleFonts.poppinsTextTheme(), // Custom font
+      ),
       home: const HomeScreen(),
     );
   }
@@ -58,19 +64,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Row(
                     children: [
-                     
-                      const SizedBox(width: 8), // Space between the name and profile picture
+                      const SizedBox(
+                          width:
+                              8), // Space between the name and profile picture
 
                       // Profile Picture
                       const CircleAvatar(
-                        backgroundImage: AssetImage('assets/images/Mr._Krabs.png'), // Path to local asset
+                        backgroundImage: AssetImage(
+                            'assets/images/Mr._Krabs.png'), // Path to local asset
                         radius: 20,
                       ),
                       const SizedBox(width: 10),
                       // User Name Text
-                      const Text(
+                      Text(
                         'Edward Phiri', // Replace with the user's name or a variable
-                        style: TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.black,
@@ -78,7 +86,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-
                   Image.asset(
                     'assets/icons/setting.png', // Path to local asset
                     width: 24,
@@ -87,7 +94,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-
               RepaintBoundary(
                 child: Container(
                   padding: const EdgeInsets.all(24),
@@ -104,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ExpansionTile(
                         title: Text(
                           selectedPocket ?? 'Main Pocket',
-                          style: const TextStyle(
+                          style: GoogleFonts.poppins(
                             fontSize: 20,
                             color: Color.fromARGB(255, 70, 130, 180),
                             fontWeight: FontWeight.bold,
@@ -126,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 10),
                       Text(
                         '\$${selectedPocketBalance.toStringAsFixed(2)}',
-                        style: const TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
                         ),
@@ -135,9 +141,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             '*6749',
-                            style: TextStyle(
+                            style: GoogleFonts.poppins(
                               fontSize: 16,
                               color: Colors.grey,
                             ),
@@ -163,7 +169,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -173,36 +178,38 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: ElevatedButton.styleFrom(
                       shape: const StadiumBorder(),
                       backgroundColor: Colors.grey[300],
-                      padding: const EdgeInsets.symmetric(horizontal: 44, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 44, vertical: 12),
                       elevation: 0,
                     ),
-                    child: const Text("Get", style: TextStyle(color: Colors.black)),
+                    child: Text("Get",
+                        style: GoogleFonts.poppins(color: Colors.black)),
                   ),
                   ElevatedButton(
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
                       shape: const StadiumBorder(),
                       backgroundColor: Colors.grey[300],
-                      padding: const EdgeInsets.symmetric(horizontal: 44, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 44, vertical: 12),
                       elevation: 0,
                     ),
-                    child: const Text("Send", style: TextStyle(color: Colors.black)),
+                    child: Text("Send",
+                        style: GoogleFonts.poppins(color: Colors.black)),
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
               const Divider(),
-              const Text(
+              Text(
                 "Recent transactions",
-                style: TextStyle(
+                style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey,
                 ),
               ),
               const SizedBox(height: 16),
-
               Expanded(
                 child: ListView(
                   children: const [
@@ -262,32 +269,34 @@ class TransactionItem extends StatelessWidget {
         children: [
           Row(
             children: [
-            CircleAvatar(
-              backgroundColor: Colors.transparent, // Remove background if you want only the image to be visible
-              radius: 20, // Adjust radius as needed
-              child: ClipOval(
-                child: Image.asset(
-                  'assets/icons/money-bag.png', // Path to your custom image asset
-                  fit: BoxFit.cover, // Ensures the image covers the entire CircleAvatar area
-                  width: 24, // Adjust width as needed
-                  height: 24, // Adjust height as needed
+              CircleAvatar(
+                backgroundColor: Colors
+                    .transparent, // Remove background if you want only the image to be visible
+                radius: 20, // Adjust radius as needed
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/icons/money-bag.png', // Path to your custom image asset
+                    fit: BoxFit
+                        .cover, // Ensures the image covers the entire CircleAvatar area
+                    width: 24, // Adjust width as needed
+                    height: 24, // Adjust height as needed
+                  ),
                 ),
               ),
-            ),
               const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(color: Colors.grey),
+                    style: GoogleFonts.poppins(color: Colors.grey),
                   ),
                 ],
               ),
@@ -295,7 +304,7 @@ class TransactionItem extends StatelessWidget {
           ),
           Text(
             amount,
-            style: const TextStyle(
+            style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
