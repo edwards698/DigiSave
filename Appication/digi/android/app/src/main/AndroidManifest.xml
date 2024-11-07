@@ -2,7 +2,7 @@
           package="com.example.digi"> <!-- Replace with your actual package name -->
 
     <application
-        android:label="digi"
+        android:label="Digi-Save"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         
