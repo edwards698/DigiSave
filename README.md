@@ -35,7 +35,7 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 
 ## ESP32 with RFID Component Connections
 
-| RFID                   | ESP32                  | Description                               |
+| **RFID**               | **ESP32**              | **Description**                           |
 |------------------------|------------------------|-------------------------------------------|
 | 3.3V                   | 3.3V                   | Distance measurement sensor               |
 | GND                    | GND                    | Analog pin for temperature data           |
@@ -45,7 +45,7 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 | Humidity Sensor        | Analog or Digital Pin  | Measures ambient humidity                 |
 | IR Receiver            | Digital (e.g., D2)     | Infrared signal reception                 |
 | Push Button            | Digital (e.g., D4)     | Button for user input                     |
-| LCD Display 16x2       | ESP32                  | Description                               |
+| **LCD Display 16x2**   | **ESP32**              | **Description**                           |
 |------------------------|------------------------|-------------------------------------------|
 | GND                    | GND                    | Detects ambient light levels              |
 | VCC                    | VCC                    | Detects gas concentration levels          |
