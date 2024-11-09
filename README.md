@@ -27,9 +27,10 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 |-----------------------|---------------------------------------------|----------------------------------------------------|
 | **Flutter**      |Development kit                        |  [Flutter](https://flutter.dev)                                                         |
 | **C/C++**             | Radio-frequency identification               | [SourceForge](https://sourceforge.net/projects/orwelldevcpp/)   |
-| **Firebase**      | a backend solution                          | [Google Cloud console](https://cloud.google.com/)                         |
+| **Firebase**      | Backend solution                          | [Google Cloud console](https://cloud.google.com/)                         |
 
-
+# For the Developement of the Embedded System go here 
+You can access and download the files **[Here](https://sourceforge.net/projects/orwelldevcpp/)**
 
 # Features
 ### 1. Multi-Pocket Savings
