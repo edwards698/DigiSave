@@ -45,10 +45,12 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 | Humidity Sensor        | Analog or Digital Pin  | Measures ambient humidity                 |
 | IR Receiver            | Digital (e.g., D2)     | Infrared signal reception                 |
 | Push Button            | Digital (e.g., D4)     | Button for user input                     |
-| Light Sensor (LDR)     | Analog (e.g., A1)      | Detects ambient light levels              |
-| Gas Sensor             | Analog (e.g., A2)      | Detects gas concentration levels          |
-| Motion Sensor (PIR)    | Digital (e.g., D3)     | Detects movement in the surrounding area  |
-| Potentiometer          | Analog (e.g., A0)      | Variable resistor for adjusting values    |
+| LCD Display 16x2       | ESP32                  | Description                               |
+|------------------------|------------------------|-------------------------------------------|
+| GND                    | GND                    | Detects ambient light levels              |
+| VCC                    | VCC                    | Detects gas concentration levels          |
+| SCL                    | SCL GPIO(D4)           | Detects movement in the surrounding area  |
+| SDA                    | SDA GPIO(D2)           | Variable resistor for adjusting values    |
 
 # Instructions for Use
 * Arduino Pins: Adjust pin numbers based on your setup.
