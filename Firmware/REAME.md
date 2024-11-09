@@ -15,3 +15,7 @@
 | Motion Sensor (PIR)    | Digital (e.g., D3)     | Detects movement in the surrounding area  |
 | Potentiometer          | Analog (e.g., A0)      | Variable resistor for adjusting values    |
 
+# Instructions for Use
+* Arduino Pins: Adjust pin numbers based on your setup.
+* Descriptions: Customize based on the specific function of each component in your project.
+* Additional Components: Add any extra components used in your setup as needed.
