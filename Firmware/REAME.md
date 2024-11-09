@@ -2,9 +2,9 @@
 
 | RFID                   | ESP32                  | Description                               |
 |------------------------|------------------------|-------------------------------------------|
-| Ultrasonic Sensor      | VCC, GND, Trig, Echo   | Distance measurement sensor               |
-| Temperature Sensor     | Analog (A0, A1, etc.)  | Analog pin for temperature data           |
-| LED                    | Digital (e.g., D13)    | Indicator light                           |
+| 3.3V                   | 3.3V                   | Distance measurement sensor               |
+| GND                    | GND                    | Analog pin for temperature data           |
+| RST                    | GPIO (D13)             | Indicator light                           |
 | Buzzer                 | Digital (e.g., D12)    | Sound alert                               |
 | Servo Motor            | PWM (e.g., D9)         | For controlled rotation movements         |
 | Humidity Sensor        | Analog or Digital Pin  | Measures ambient humidity                 |
