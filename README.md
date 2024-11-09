@@ -29,8 +29,8 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 | **C/C++**             | Radio-frequency identification               | [SourceForge](https://sourceforge.net/projects/orwelldevcpp/)   |
 | **Firebase**      | Backend solution                          | [Google Cloud console](https://cloud.google.com/)                         |
 
-* You can access and download the files **[Embbedded System](https://sourceforge.net/projects/orwelldevcpp/)**
-* You can access and download the files **[Android Application](https://sourceforge.net/projects/orwelldevcpp/)**
+* You can access and download the files **[Embbedded System](https://github.com/edwards698/DigiSave/tree/main/Firmware)**
+* You can access and download the files **[Android Application](https://github.com/edwards698/DigiSave/tree/main/Appication/digi)**
 * Download of the APK **[Download](https://sourceforge.net/projects/orwelldevcpp/)**
 
 # Features
