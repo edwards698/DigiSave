@@ -45,6 +45,9 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 | Humidity Sensor        | Analog or Digital Pin  | Measures ambient humidity                 |
 | IR Receiver            | Digital (e.g., D2)     | Infrared signal reception                 |
 | Push Button            | Digital (e.g., D4)     | Button for user input                     |
+
+## ESP32 with LCD Component Connections
+
 | **LCD Display 16x2**   | **ESP32**              | **Description**                           |
 |------------------------|------------------------|-------------------------------------------|
 | GND                    | GND                    | Detects ambient light levels              |
