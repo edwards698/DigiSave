@@ -21,7 +21,6 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 | **RFID**             | Radio-frequency identification               | [Transfer Multisort Electronics](https://www.tme.eu)   |
 | **LCD Display 16x2**      | A 16×2 LCD display                            | [Transfer Multisort Electronics](https://www.tme.eu)                         |
 | **PCB**           | A mechanically support and electrically connect electronic components using conductive pathways.      |[Transfer Multisort Electronics](https://www.tme.eu)              |
-|
 
 ## 1. Software
 | **Type**           | **Details**                                 | **Source**                                |
@@ -29,7 +28,7 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 | **Flutter**      | The module supports a data rate of up to 150 Mbps, and 20 dBm output power at the antenna to ensure the widest physical range.                        |  [Flutter](https://www.google.com)                                                         |
 | **C/C++**             | Radio-frequency identification               | [Transfer Multisort Electronics](https://www.tme.eu)   |
 | **Firebase**      | A 16×2 LCD display                            | [Google Console](https://www.tme.eu)                         |
-|
+
 
 
 # Features
