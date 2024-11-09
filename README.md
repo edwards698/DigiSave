@@ -29,7 +29,7 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 | **C/C++**             | Radio-frequency identification               | [SourceForge](https://sourceforge.net/projects/orwelldevcpp/)   |
 | **Firebase**      | Backend solution                          | [Google Cloud console](https://cloud.google.com/)                         |
 
-# For the Developement of the Embedded System 
+# Developement of the Embedded System 
 You can access and download the files **[Here](https://sourceforge.net/projects/orwelldevcpp/)**
 
 # Features
