@@ -15,23 +15,13 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 
 # Development and Technology Stack for Dev
 ## 1. Hardware
-| **Componet type**           | **Details**                                 | **Source**                                |
+| **Componet type**           | **Details**                           | **Source**                                         |
 |-----------------------|---------------------------------------------|----------------------------------------------------|
 | **ESP32**      | The module supports a data rate of up to 150 Mbps, and 20 dBm output power at the antenna to ensure the widest physical range.                        |  [Transfer Multisort Electronics](https://www.tme.eu)                                                         |
 | **RFID**             | Radio-frequency identification               | [Transfer Multisort Electronics](https://www.tme.eu)   |
 | **LCD Display 16x2**      | A 16×2 LCD display                            | [Transfer Multisort Electronics](https://www.tme.eu)                         |
 | **PCB**           | A mechanically support and electrically connect electronic components using conductive pathways.      |[Transfer Multisort Electronics](https://www.tme.eu)              |
-
-## 1. Software
-| **Type**           | **Details**                                 | **Source**                                |
-|-----------------------|---------------------------------------------|----------------------------------------------------|
-| **Flutter**      |Development kit                        |  [Flutter](https://flutter.dev)                                                         |
-| **C/C++**             | Radio-frequency identification               | [SourceForge](https://sourceforge.net/projects/orwelldevcpp/)   |
-| **Firebase**      | Backend solution                          | [Google Cloud console](https://cloud.google.com/)                         |
-
-* You can access and download the files **[Embbedded System](https://github.com/edwards698/DigiSave/tree/main/Firmware)**
-* You can access and download the files **[Android Application](https://github.com/edwards698/DigiSave/tree/main/Appication/digi)**
-* Download of the APK **[Download](https://sourceforge.net/projects/orwelldevcpp/)**
+ 
 
 ## ESP32 with RFID Component Connections
 
@@ -72,6 +62,17 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 * Arduino Pins: Adjust pin numbers based on your setup.
 * Descriptions: Customize based on the specific function of each component in your project.
 * Additional Components: Add any extra components used in your setup as needed.
+
+## 1. Software
+| **Type**           | **Details**                                 | **Source**                                |
+|-----------------------|---------------------------------------------|----------------------------------------------------|
+| **Flutter**      |Development kit                        |  [Flutter](https://flutter.dev)                                                         |
+| **C/C++**             | Radio-frequency identification               | [SourceForge](https://sourceforge.net/projects/orwelldevcpp/)   |
+| **Firebase**      | Backend solution                          | [Google Cloud console](https://cloud.google.com/)                         |
+
+* You can access and download the files **[Embbedded System](https://github.com/edwards698/DigiSave/tree/main/Firmware)**
+* You can access and download the files **[Android Application](https://github.com/edwards698/DigiSave/tree/main/Appication/digi)**
+* Download of the APK **[Download](https://sourceforge.net/projects/orwelldevcpp/)**
 
 # Features
 ### 1. Multi-Pocket Savings
