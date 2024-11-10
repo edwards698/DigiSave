@@ -14,7 +14,7 @@ This project is part of the ```Tech Master Event Hackathon``` and is released as
 DigiSave is a modern savings solution that combines the convenience of a mobile app with an innovative hardware device, offering users a way to manage savings. With DigiSave, users can set financial goals, create multiple savings pockets, and deposit money daily with precision. The system ensures data integrity using ```ESP32``` for connectivity and ```Firebase``` for secure data storage. Additionally, the DigiSave app built with ```C++```, ```Dart```, ```Kotlin```, ```Java``` and ```Swift``` with ```Flutter framework``` provides real-time updates, making savings management intuitive and efficient and.
 
 # Development and Technology Stack for Dev
-## 1. Hardware
+### 1. Hardware
 | **Componet type**           | **Details**                           | **Source**                                         |
 |-----------------------|---------------------------------------------|----------------------------------------------------|
 | **ESP32**      | The module supports a data rate of up to 150 Mbps, and 20 dBm output power at the antenna to ensure the widest physical range.                        |  [Transfer Multisort Electronics](https://www.tme.eu)                                                         |
@@ -23,7 +23,7 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 | **PCB**           | A mechanically support and electrically connect electronic components using conductive pathways.      |[Transfer Multisort Electronics](https://www.tme.eu)              |
  
 
-## ESP32 with RFID Component Connections
+### ESP32 with RFID Component Connections
 
 | **RFID**               | **ESP32**              | **Description**                           |
 |------------------------|------------------------|-------------------------------------------|
@@ -36,7 +36,7 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 | IR Receiver            | Digital (e.g., D2)     | Pin Connection                            |
 | Push Button            | Digital (e.g., D4)     | Pin Connection                            |
 
-## ESP32 with LCD Component Connections
+### ESP32 with LCD Component Connections
 
 | **LCD Display 16x2**   | **ESP32**              | **Description**                           |
 |------------------------|------------------------|-------------------------------------------|
@@ -45,7 +45,7 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 | SCL                    | SCL GPIO(D2)           | Pin connection                            |
 | SDA                    | SDA GPIO(D4)           | Pin connection                            |
 
-## ESP32 with Keypad 4x4 Component Connections
+### ESP32 with Keypad 4x4 Component Connections
 
 | **Keypad 4x4**         | **ESP32**              | **Description**                           |
 |------------------------|------------------------|-------------------------------------------|
