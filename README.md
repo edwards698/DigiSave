@@ -58,12 +58,12 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 | C3                     | GPIO(33)               | Pin Connection                            |
 | C4                     | GPIO(32)               | Pin Connection                            |
 
-# Instructions for Use
+### Instructions for Use
 * Arduino Pins: Adjust pin numbers based on your setup.
 * Descriptions: Customize based on the specific function of each component in your project.
 * Additional Components: Add any extra components used in your setup as needed.
 
-## 1. Software
+# Software
 | **Type**           | **Details**                                 | **Source**                                |
 |-----------------------|---------------------------------------------|----------------------------------------------------|
 | **Flutter**      |Development kit                        |  [Flutter](https://flutter.dev)                                                         |
