@@ -193,16 +193,6 @@ Keypad Input: Users enter deposit amounts manually.
 * All deposits are authenticated through ESP32 and stored in Firebase, ensuring secure access and data integrity.
 * Transactions are tracked by User ID or Card ID, minimizing the risk of errors.
 ##
-# Development and Technology Stack
-## 1. Embedded System Development:
-1. ```ESP32```: Wi-Fi connectivity for real-time data transmission.
-2. ```PlatformIO on VS Code```: Development environment for embedded software.
-C++: Core programming language for firmware development.
-
-## 2. Mobile App Development:
-* ```Flutter Framework```: Cross-platform app development.
-* ```Firebase```: Database and authentication for secure data storage.
-VS Code IDE: For coding and testing the Flutter application.
 
 
 
