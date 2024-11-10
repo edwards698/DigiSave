@@ -14,7 +14,7 @@ This project is part of the ```Tech Master Event Hackathon``` and is released as
 DigiSave is a modern savings solution that combines the convenience of a mobile app with an innovative hardware device, offering users a way to manage savings. With DigiSave, users can set financial goals, create multiple savings pockets, and deposit money daily with precision. The system ensures data integrity using ```ESP32``` for connectivity and ```Firebase``` for secure data storage. Additionally, the DigiSave app built with ```C++```, ```Dart```, ```Kotlin```, ```Java``` and ```Swift``` with ```Flutter framework``` provides real-time updates, making savings management intuitive and efficient and.
 
 # Development and Technology Stack for Dev
-### 1. Hardware
+## 1. Hardware
 | **Componet type**           | **Details**                           | **Source**                                         |
 |-----------------------|---------------------------------------------|----------------------------------------------------|
 | **ESP32**      | The module supports a data rate of up to 150 Mbps, and 20 dBm output power at the antenna to ensure the widest physical range.                        |  [Transfer Multisort Electronics](https://www.tme.eu)                                                         |
