@@ -59,8 +59,8 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 
 | **Keypad 4x4**         | **ESP32**              | **Description**                           |
 |------------------------|------------------------|-------------------------------------------|
-| R1                     | GPIO(13)               | 3.3 Voltage Power Connection              |
-| R2                     | GPIO(14)               | GND Power connection                      |
+| R1                     | GPIO(13)               | Pin Connection                            |
+| R2                     | GPIO(14)               | Pin connection                            |
 | R3                     | GPIO(27)               | Pin Connection                            |
 | R4                     | GPIO(27)               | Pin Connection                            |
 | C1                     | GPIO(26)               | Pin Connection                            |
