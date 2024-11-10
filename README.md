@@ -37,23 +37,36 @@ DigiSave is a modern savings solution that combines the convenience of a mobile 
 
 | **RFID**               | **ESP32**              | **Description**                           |
 |------------------------|------------------------|-------------------------------------------|
-| 3.3V                   | 3.3V                   | Distance measurement sensor               |
-| GND                    | GND                    | Analog pin for temperature data           |
-| RST                    | GPIO (D13)             | Indicator light                           |
-| Buzzer                 | Digital (e.g., D12)    | Sound alert                               |
-| Servo Motor            | PWM (e.g., D9)         | For controlled rotation movements         |
-| Humidity Sensor        | Analog or Digital Pin  | Measures ambient humidity                 |
-| IR Receiver            | Digital (e.g., D2)     | Infrared signal reception                 |
-| Push Button            | Digital (e.g., D4)     | Button for user input                     |
+| 3.3V                   | 3.3V                   | 3.3 Voltage Power Connection              |
+| GND                    | GND                    | GND Power connection                      |
+| RST                    | GPIO (D13)             | Pin Connection                            |
+| Buzzer                 | Digital (e.g., D12)    | Pin Connection                            |
+| Servo Motor            | PWM (e.g., D9)         | Pin Connection                            |
+| Humidity Sensor        | Analog or Digital Pin  | Pin Connection                            |
+| IR Receiver            | Digital (e.g., D2)     | Pin Connection                            |
+| Push Button            | Digital (e.g., D4)     | Pin Connection                            |
 
 ## ESP32 with LCD Component Connections
 
 | **LCD Display 16x2**   | **ESP32**              | **Description**                           |
 |------------------------|------------------------|-------------------------------------------|
-| GND                    | GND                    | Detects ambient light levels              |
-| VCC                    | VCC                    | Detects gas concentration levels          |
-| SCL                    | SCL GPIO(D4)           | Detects movement in the surrounding area  |
-| SDA                    | SDA GPIO(D2)           | Variable resistor for adjusting values    |
+| GND                    | GND                    | Negative power connection                 |
+| VCC                    | VCC                    | Postive power coneection                  |
+| SCL                    | SCL GPIO(D2)           | Pin connection                            |
+| SDA                    | SDA GPIO(D4)           | Pin connection                            |
+
+## ESP32 with Keypad 4x4 Component Connections
+
+| **Keypad 4x4**         | **ESP32**              | **Description**                           |
+|------------------------|------------------------|-------------------------------------------|
+| R1                     | GPIO(13)               | 3.3 Voltage Power Connection              |
+| R2                     | GPIO(14)               | GND Power connection                      |
+| R3                     | GPIO(27)               | Pin Connection                            |
+| R4                     | GPIO(27)               | Pin Connection                            |
+| C1                     | GPIO(26)               | Pin Connection                            |
+| C2                     | GPIO(25)               | Pin Connection                            |
+| C3                     | GPIO(33)               | Pin Connection                            |
+| C4                     | GPIO(32)               | Pin Connection                            |
 
 # Instructions for Use
 * Arduino Pins: Adjust pin numbers based on your setup.
