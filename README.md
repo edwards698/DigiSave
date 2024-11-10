@@ -3,9 +3,9 @@
 
 <span style="color:red">
 
-*This project is part of the ```[Transfer Multisort Electronics](https://techmasterevent.com/)``` and is released as an open-source resource for the community. It is designed to foster collaborative learning, where participants can share their projects and benefit from each other's contributions. Through open access, The is to support the growth and exchange of innovative ideas, providing a platform for everyone to learn and improve together.*
+*This project is part of the [Tech Master Event](https://techmasterevent.com/) and is released as an open-source resource for the community. It is designed to foster collaborative learning, where participants can share their projects and benefit from each other's contributions. Through open access, The is to support the growth and exchange of innovative ideas, providing a platform for everyone to learn and improve together.*
 
-**Please note:** This project is not for commercial use or sale.
+**Please note:** *This project is not for commercial use or sale.*
 
 </span>
 
