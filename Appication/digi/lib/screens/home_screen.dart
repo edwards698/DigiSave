@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:digi/screens/bottom_navigation.dart';
 //Google fonts popins
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 
 void main() {
   runApp(const MyApp());
@@ -34,37 +35,42 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0; // Index for the selected bottom navigation item
   String? selectedPocket;
 
-  // Balance fetched from Firestore
+  // Balance fetched from Realtime Database
   double _fetchedBalance = 441.00; // Default balance
 
   @override
   void initState() {
     super.initState();
-    _fetchBalanceFromFirestore();
+    _fetchBalanceFromRealtimeDB();
+    AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
+      if (!isAllowed) {
+        AwesomeNotifications().requestPermissionToSendNotifications();
+      }
+    });
   }
 
-  // Fetch balance from Firestore
-  Future<void> _fetchBalanceFromFirestore() async {
-    FirebaseFirestore.instance
-        .collection('pockets')
-        .doc('main-pocket')
-        .snapshots()
-        .listen((snapshot) {
-      if (snapshot.exists) {
-        final message = snapshot.get('message') as String;
-        print("Fetched message from Firestore: $message"); // Debugging line
-
-        // Extracting the balance from the message
-        final balanceString = message.split(': ')[1];
-        final balance = double.tryParse(balanceString) ?? 441.00;
-
-        print("Parsed balance from Firestore: $balance"); // Debugging line
-
+  // Fetch balance from Realtime Database
+  void _fetchBalanceFromRealtimeDB() {
+    final dbRef = FirebaseDatabase.instance.ref('account/balance');
+    dbRef.onValue.listen((event) {
+      final balance = event.snapshot.value;
+      if (balance != null) {
+        final parsedBalance = double.tryParse(balance.toString()) ?? 441.00;
+        if (_fetchedBalance != parsedBalance) {
+          String changeType =
+              parsedBalance > _fetchedBalance ? 'Deposit' : 'Withdrawal';
+          double changeAmount = (parsedBalance - _fetchedBalance).abs();
+          _showNotification(
+            '$changeType Bank Terminal',
+            'Amount: \$${changeAmount.toStringAsFixed(2)}',
+          );
+        }
         setState(() {
-          _fetchedBalance = balance;
+          _fetchedBalance = parsedBalance;
         });
+        print("Fetched balance from RTDB: $parsedBalance");
       } else {
-        print("Document does not exist in Firestore"); // Debugging line
+        print("No balance found in RTDB");
       }
     });
   }
@@ -85,6 +91,39 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  void _showNotification(String title, String body) {
+    AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
+        channelKey: 'basic_channel',
+        title: title,
+        body: body,
+        notificationLayout: NotificationLayout.Default,
+      ),
+    );
+  }
+
+  void _deposit(double amount) {
+    setState(() {
+      _fetchedBalance += amount;
+    });
+    _showNotification(
+        'Deposit Successful', 'You deposited \$${amount.toStringAsFixed(2)}');
+  }
+
+  void _withdraw(double amount) {
+    if (_fetchedBalance >= amount) {
+      setState(() {
+        _fetchedBalance -= amount;
+      });
+      _showNotification('Withdrawal Successful',
+          'You withdrew \$${amount.toStringAsFixed(2)}');
+    } else {
+      _showNotification(
+          'Withdrawal Failed', 'Insufficient balance for withdrawal.');
+    }
   }
 
   @override
@@ -212,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () => _deposit(50.0), // Example deposit
                     style: ElevatedButton.styleFrom(
                       shape: const StadiumBorder(),
                       backgroundColor: Colors.grey[300],
@@ -237,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () => _withdraw(20.0), // Example withdraw
                     style: ElevatedButton.styleFrom(
                       shape: const StadiumBorder(),
                       backgroundColor: Colors.grey[300],

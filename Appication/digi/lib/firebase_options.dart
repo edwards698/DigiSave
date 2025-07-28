@@ -17,17 +17,29 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        return ios;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for ios - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.macOS:
-        return macos;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
-        return windows;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -40,49 +52,13 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCnkDqjRK3RERg4RbOpGEY7JMDDTzqUHvw',
-    appId: '1:336533887938:web:33bca50ccf6f487f00545b',
-    messagingSenderId: '336533887938',
-    projectId: 'update-a33ce',
-    authDomain: 'update-a33ce.firebaseapp.com',
-    storageBucket: 'update-a33ce.firebasestorage.app',
-    measurementId: 'G-05MY53KG2S',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBNOQUmuae90sBIyRs3byxp8ImEk1j04OI',
-    appId: '1:336533887938:android:8f70622ccc9a3ab900545b',
-    messagingSenderId: '336533887938',
-    projectId: 'update-a33ce',
-    storageBucket: 'update-a33ce.firebasestorage.app',
-  );
-
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyD1UzpN2YIRYNmUD5lTpCdPNexaALgrJL0',
-    appId: '1:336533887938:ios:71634ae51cb02b4300545b',
-    messagingSenderId: '336533887938',
-    projectId: 'update-a33ce',
-    storageBucket: 'update-a33ce.firebasestorage.app',
-    iosBundleId: 'com.example.digi',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyD1UzpN2YIRYNmUD5lTpCdPNexaALgrJL0',
-    appId: '1:336533887938:ios:71634ae51cb02b4300545b',
-    messagingSenderId: '336533887938',
-    projectId: 'update-a33ce',
-    storageBucket: 'update-a33ce.firebasestorage.app',
-    iosBundleId: 'com.example.digi',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCnkDqjRK3RERg4RbOpGEY7JMDDTzqUHvw',
-    appId: '1:336533887938:web:1dbfc939422e581f00545b',
-    messagingSenderId: '336533887938',
-    projectId: 'update-a33ce',
-    authDomain: 'update-a33ce.firebaseapp.com',
-    storageBucket: 'update-a33ce.firebasestorage.app',
-    measurementId: 'G-9PZEDWZSVB',
+    apiKey: 'AIzaSyDWKUZVhMHvAWTeQk13VZcpyPFnXLNiPDE',
+    appId: '1:939533456242:android:ee8c3294512cce0f1b03eb',
+    messagingSenderId: '939533456242',
+    projectId: 'digisave-21992',
+    databaseURL:
+        'https://digisave-21992-default-rtdb.europe-west1.firebasedatabase.app',
+    storageBucket: 'digisave-21992.firebasestorage.app',
   );
 }

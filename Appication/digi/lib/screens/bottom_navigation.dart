@@ -28,9 +28,9 @@ class CustomBottomNavigationBar extends StatelessWidget {
         ),
         BottomNavigationBarItem(
           icon: ImageIcon(
-            AssetImage('assets/icons/pay.png'),
+            AssetImage('assets/icons/bell.png'),
           ),
-          label: 'Payments',
+          label: 'Notifications',
         ),
         BottomNavigationBarItem(
           icon: ImageIcon(

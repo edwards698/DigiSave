@@ -1,13 +1,14 @@
 {
   "project_info": {
-    "project_number": "336533887938",
-    "project_id": "update-a33ce",
-    "storage_bucket": "update-a33ce.firebasestorage.app"
+    "project_number": "939533456242",
+    "firebase_url": "https://digisave-21992-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "digisave-21992",
+    "storage_bucket": "digisave-21992.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:336533887938:android:8f70622ccc9a3ab900545b",
+        "mobilesdk_app_id": "1:939533456242:android:ee8c3294512cce0f1b03eb",
         "android_client_info": {
           "package_name": "com.example.digi"
         }
@@ -15,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBNOQUmuae90sBIyRs3byxp8ImEk1j04OI"
+          "current_key": "AIzaSyDWKUZVhMHvAWTeQk13VZcpyPFnXLNiPDE"
         }
       ],
       "services": {
