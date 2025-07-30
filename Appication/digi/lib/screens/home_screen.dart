@@ -1,3 +1,4 @@
+import 'package:digi/screens/notification_history.dart';
 import 'package:flutter/material.dart';
 import 'package:digi/screens/bottom_navigation.dart';
 //Google fonts popins
@@ -32,6 +33,34 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Transactions fetched from database
+  List<Map<String, dynamic>> _transactions = [];
+
+  void _fetchTransactions() {
+    final dbRef = FirebaseDatabase.instance.ref('transactions');
+    dbRef.onValue.listen((event) {
+      final data = event.snapshot.value;
+      if (data is Map) {
+        List<Map<String, dynamic>> txList = [];
+        data.forEach((key, value) {
+          if (value is Map) {
+            txList.add({
+              'id': key,
+              'amount': value['amount'],
+              'balanceAfter': value['balanceAfter'],
+              'device': value['device'],
+              'timestamp': value['timestamp'],
+              'type': value['type'],
+            });
+          }
+        });
+        setState(() {
+          _transactions = txList.reversed.toList(); // newest first
+        });
+      }
+    });
+  }
+
   int _selectedIndex = 0; // Index for the selected bottom navigation item
   String? selectedPocket;
 
@@ -42,6 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _fetchBalanceFromRealtimeDB();
+    _fetchTransactions();
     AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
       if (!isAllowed) {
         AwesomeNotifications().requestPermissionToSendNotifications();
@@ -128,6 +158,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Show NotificationHistoryScreen if Notifications tab is selected
+    if (_selectedIndex == 1) {
+      // Convert _transactions to List<Map<String, String>> for NotificationHistoryScreen
+      final notifications = _transactions
+          .map((tx) => {
+                'title': tx['type'] == 'deposit' ? 'Deposit' : 'Withdrawal',
+                'body':
+                    'Device: ${tx['device']} | Time: ${tx['timestamp']} | Amount: \$${tx['amount']}'
+              })
+          .toList();
+      return Scaffold(
+        backgroundColor: Colors.grey[200],
+        body: NotificationHistoryScreen(notifications: notifications),
+        bottomNavigationBar: CustomBottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          selectedItemColor: Colors.blue,
+          unselectedItemColor: Colors.grey,
+        ),
+      );
+    }
+    // ...existing code...
     return Scaffold(
       backgroundColor: Colors.grey[200],
       body: SafeArea(
@@ -339,24 +391,32 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 10),
               Expanded(
-                child: ListView(
-                  children: const [
-                    TransactionItem(
-                      icon: Icons.directions_car,
-                      title: 'Digi-Save Card',
-                      subtitle: '12:20',
-                      amount: '\$10.34',
-                      iconColor: Colors.pink,
-                    ),
-                    TransactionItem(
-                      icon: Icons.local_cafe,
-                      title: 'Mobile',
-                      subtitle: '11:31',
-                      amount: '\$7.40',
-                      iconColor: Colors.green,
-                    ),
-                  ],
-                ),
+                child: _transactions.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No transactions yet.',
+                          style: GoogleFonts.poppins(color: Colors.grey),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _transactions.length,
+                        itemBuilder: (context, index) {
+                          final tx = _transactions[index];
+                          return TransactionItem(
+                            icon: tx['type'] == 'deposit'
+                                ? Icons.arrow_downward
+                                : Icons.arrow_upward,
+                            title: tx['type'] == 'deposit'
+                                ? 'Deposit'
+                                : 'Withdrawal',
+                            subtitle: '${tx['timestamp']} | ${tx['device']}',
+                            amount: '\$${tx['amount']}',
+                            iconColor: tx['type'] == 'deposit'
+                                ? Colors.green
+                                : Colors.red,
+                          );
+                        },
+                      ),
               ),
             ],
           ),
