@@ -1106,7 +1106,22 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
-    // ...existing code...
+
+    // Show TerminalLibraryScreen if Settings tab is selected
+    if (_selectedIndex == 2) {
+      return Scaffold(
+        backgroundColor: Colors.grey[200],
+        body: TerminalLibraryScreen(),
+        bottomNavigationBar: CustomBottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          selectedItemColor: Colors.blue,
+          unselectedItemColor: Colors.grey,
+        ),
+      );
+    }
+
+    // Default: Show main home screen (Pockets tab)
     return Scaffold(
       backgroundColor: Colors.grey[200],
       body: SafeArea(
@@ -1142,11 +1157,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                  Image.asset(
-                    'assets/icons/setting.png', // Path to local asset
-                    width: 24,
-                    height: 24,
-                  ),
+
+                  // Image.asset(
+                  //   'assets/icons/setting.png', // Path to local asset
+                  //   width: 24,
+                  //   height: 24,
+                  // ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -1438,7 +1454,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const Spacer(),
                           Text(
-                            "Terminal Library",
+                            "My Library",
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -1446,7 +1462,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           Text(
-                            "15 Items",
+                            "1 Items",
                             style: GoogleFonts.poppins(
                               fontSize: 10,
                               color: Colors.grey[600],
@@ -1519,13 +1535,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     flex: 1,
                     child: GestureDetector(
                       onTap: () {
-                        // Navigate to Terminal Library Screen
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TerminalLibraryScreen(),
-                          ),
-                        );
+                        // // Navigate to Terminal Library Screen
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => TerminalLibraryScreen(),
+                        //   ),
+                        // );
                       },
                       child: Container(
                         height: 100,
@@ -1541,7 +1557,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Icon(
-                                  Icons.task_alt,
+                                  Icons.add_circle_outline,
                                   color: Colors.grey[700],
                                   size: 20,
                                 ),
@@ -1557,7 +1573,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const Spacer(),
                             Text(
-                              "Seed Terminal",
+                              "Add Task",
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,

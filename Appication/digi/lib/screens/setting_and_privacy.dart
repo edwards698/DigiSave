@@ -45,10 +45,7 @@ class _TerminalLibraryScreenState extends State<TerminalLibraryScreen> {
       appBar: AppBar(
         backgroundColor: Colors.grey[100],
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false, // This removes the back button
         title: AnimatedOpacity(
           opacity: _showTitle ? 1.0 : 0.0,
           duration: Duration(milliseconds: 200),

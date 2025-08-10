@@ -34,9 +34,9 @@ class CustomBottomNavigationBar extends StatelessWidget {
         ),
         BottomNavigationBarItem(
           icon: ImageIcon(
-            AssetImage('assets/icons/terminal.png'),
+            AssetImage('assets/icons/settings.png'),
           ),
-          label: 'Seed Terminal',
+          label: 'Settings',
         ),
       ],
       selectedItemColor: selectedItemColor,
