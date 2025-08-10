@@ -142,7 +142,6 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                     ),
                   ),
                 ),
-                Divider(height: 1, color: Colors.grey[300]),
                 Expanded(
                   child: Center(
                     child: Text(
@@ -200,10 +199,6 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                       ),
                     ),
                   ),
-                ),
-                // Divider
-                SliverToBoxAdapter(
-                  child: Divider(height: 1, color: Colors.grey[300]),
                 ),
                 // Notifications list
                 SliverList(

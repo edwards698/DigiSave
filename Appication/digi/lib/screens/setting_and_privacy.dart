@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:digi/screens/nfc_settings.dart';
 
 class TerminalLibraryScreen extends StatefulWidget {
   const TerminalLibraryScreen({Key? key}) : super(key: key);
@@ -115,6 +116,11 @@ class _TerminalLibraryScreenState extends State<TerminalLibraryScreen> {
                   icon: Icons.security,
                   title: 'Security',
                   onTap: () => _showSnackBar(context, 'Security'),
+                ),
+                _buildSettingsItem(
+                  icon: Icons.nfc,
+                  title: 'NFC Settings',
+                  onTap: () => _navigateToNFCSettings(context),
                 ),
                 _buildSettingsItem(
                   icon: Icons.notifications,
@@ -387,6 +393,16 @@ class _TerminalLibraryScreenState extends State<TerminalLibraryScreen> {
           ],
         );
       },
+    );
+  }
+
+  void _navigateToNFCSettings(BuildContext context) {
+    // Navigate to the dedicated NFC settings screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NFCSettingsScreen(),
+      ),
     );
   }
 }

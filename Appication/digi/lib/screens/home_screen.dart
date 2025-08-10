@@ -8,6 +8,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:nfc_manager/nfc_manager.dart';
 
 // Add your HomeScreen StatefulWidget here
 class HomeScreen extends StatefulWidget {
@@ -152,6 +153,12 @@ class _HomeScreenState extends State<HomeScreen> {
   // Balance fetched from Realtime Database
   double _fetchedBalance = 441.00; // Default balance
 
+  // NFC-related state variables
+  bool _isNfcAvailable = false;
+  bool _isNfcReading = false;
+  String? _detectedCardId;
+  String _nfcStatus = 'Ready to scan';
+
 // Removed duplicate/stray Expanded widget and transaction list code that was outside the main widget tree.
 // Removed stray code block that was outside any function or widget.
 // ...existing code...
@@ -179,11 +186,21 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _fetchTransactions();
     _fetchBalanceFromRealtimeDB();
+    _initializeNFC();
     AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
       if (!isAllowed) {
         AwesomeNotifications().requestPermissionToSendNotifications();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    // Stop NFC session if it's running
+    if (_isNfcReading) {
+      NfcManager.instance.stopSession();
+    }
+    super.dispose();
   }
 
   // Fetch balance from Realtime Database
@@ -229,6 +246,180 @@ class _HomeScreenState extends State<HomeScreen> {
     }).catchError((error) {
       print("Error creating notification: $error");
     });
+  }
+
+  // Initialize NFC functionality
+  void _initializeNFC() async {
+    try {
+      bool isAvailable = await NfcManager.instance.isAvailable();
+      setState(() {
+        _isNfcAvailable = isAvailable;
+      });
+
+      if (isAvailable) {
+        print("NFC is available on this device");
+      } else {
+        print("NFC is not available on this device");
+      }
+    } catch (e) {
+      print("Error initializing NFC: $e");
+      setState(() {
+        _isNfcAvailable = false;
+      });
+    }
+  }
+
+  // Start NFC scanning for RC522 cards
+  void _startNFCScanning({Function(bool, double)? onPaymentSuccess}) async {
+    if (!_isNfcAvailable) {
+      _showNotification('NFC Error', 'NFC is not available on this device');
+      return;
+    }
+
+    setState(() {
+      _isNfcReading = true;
+      _nfcStatus = 'Scanning for RC522 card...';
+      _detectedCardId = null;
+    });
+
+    try {
+      await NfcManager.instance.startSession(
+        onDiscovered: (NfcTag tag) async {
+          print("NFC tag detected: ${tag.data}");
+
+          // Extract card UID for RC522 cards
+          String? cardId = _extractCardId(tag);
+
+          setState(() {
+            _detectedCardId = cardId;
+            _nfcStatus = cardId != null
+                ? 'RC522 Card Detected: $cardId'
+                : 'Card detected but not RC522 compatible';
+          });
+
+          if (cardId != null) {
+            _showNotification('RC522 Card Detected', 'Card ID: $cardId');
+            // Process payment automatically when RC522 card is detected
+            double paymentAmount = await _processNFCPayment(cardId);
+
+            // Call the success callback if provided
+            if (onPaymentSuccess != null && paymentAmount > 0) {
+              onPaymentSuccess(true, paymentAmount);
+            }
+          }
+
+          // Stop NFC session after detection
+          await NfcManager.instance.stopSession();
+          setState(() {
+            _isNfcReading = false;
+          });
+        },
+      );
+    } catch (e) {
+      print("Error during NFC scanning: $e");
+      setState(() {
+        _isNfcReading = false;
+        _nfcStatus = 'Error scanning for NFC cards';
+      });
+      _showNotification('NFC Error', 'Failed to scan for NFC cards');
+      await NfcManager.instance.stopSession();
+    }
+  }
+
+  // Extract card ID from NFC tag data
+  String? _extractCardId(NfcTag tag) {
+    try {
+      // Try to get UID from different NFC technologies
+
+      // NfcA (most common for RC522)
+      if (tag.data['nfca'] != null) {
+        final nfcA = tag.data['nfca'];
+        if (nfcA['identifier'] != null) {
+          List<int> uid = List<int>.from(nfcA['identifier']);
+          return uid
+              .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+              .join(':')
+              .toUpperCase();
+        }
+      }
+
+      // NfcB
+      if (tag.data['nfcb'] != null) {
+        final nfcB = tag.data['nfcb'];
+        if (nfcB['identifier'] != null) {
+          List<int> uid = List<int>.from(nfcB['identifier']);
+          return uid
+              .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+              .join(':')
+              .toUpperCase();
+        }
+      }
+
+      // NfcF
+      if (tag.data['nfcf'] != null) {
+        final nfcF = tag.data['nfcf'];
+        if (nfcF['identifier'] != null) {
+          List<int> uid = List<int>.from(nfcF['identifier']);
+          return uid
+              .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+              .join(':')
+              .toUpperCase();
+        }
+      }
+
+      // NfcV
+      if (tag.data['nfcv'] != null) {
+        final nfcV = tag.data['nfcv'];
+        if (nfcV['identifier'] != null) {
+          List<int> uid = List<int>.from(nfcV['identifier']);
+          return uid
+              .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+              .join(':')
+              .toUpperCase();
+        }
+      }
+
+      print("Could not extract card ID from tag data: ${tag.data}");
+      return null;
+    } catch (e) {
+      print("Error extracting card ID: $e");
+      return null;
+    }
+  }
+
+  // Process NFC payment when RC522 card is detected
+  Future<double> _processNFCPayment(String cardId) async {
+    double paymentAmount = 25.0; // Default payment amount
+
+    if (_fetchedBalance >= paymentAmount) {
+      setState(() {
+        _fetchedBalance -= paymentAmount;
+      });
+
+      // Add transaction to Firebase
+      _addTransactionToFirebase('withdrawal', paymentAmount);
+
+      _showNotification('NFC Payment Successful',
+          'RC522 Card: $cardId\nAmount: \$${paymentAmount.toStringAsFixed(2)}');
+
+      return paymentAmount;
+    } else {
+      _showNotification('Payment Failed', 'Insufficient balance for payment');
+      return 0.0;
+    }
+  }
+
+  // Stop NFC scanning
+  void _stopNFCScanning() async {
+    try {
+      await NfcManager.instance.stopSession();
+      setState(() {
+        _isNfcReading = false;
+        _nfcStatus = 'NFC scanning stopped';
+      });
+    } catch (e) {
+      print("Error stopping NFC session: $e");
+    }
   }
 
   void _deposit(double amount) {
@@ -365,34 +556,151 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: Lottie.asset(
                                       'assets/animations/nfc.json',
                                       fit: BoxFit.contain,
-                                      repeat: true,
-                                      animate: true,
+                                      repeat: _isNfcReading,
+                                      animate: _isNfcReading,
                                     ),
                                   ),
                                   SizedBox(height: 12),
                                   Text(
-                                    'Ready for NFC Payment',
+                                    _isNfcReading
+                                        ? 'Scanning for RC522...'
+                                        : 'Ready for RC522 Payment',
                                     style: GoogleFonts.poppins(
                                       fontSize: 24,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.blue[800],
+                                      color: _isNfcReading
+                                          ? Colors.orange[800]
+                                          : Colors.blue[800],
                                     ),
                                   ),
                                   SizedBox(height: 8),
                                   Text(
-                                    'Hold your device near the NFC terminal to make a payment',
+                                    _nfcStatus,
                                     style: GoogleFonts.poppins(
                                       fontSize: 14,
                                       color: Colors.grey[600],
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
+                                  if (_detectedCardId != null) ...[
+                                    SizedBox(height: 12),
+                                    Container(
+                                      padding: EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green[50],
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                            color: Colors.green[200]!),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Icon(Icons.credit_card,
+                                              color: Colors.green[600],
+                                              size: 32),
+                                          SizedBox(height: 8),
+                                          Text(
+                                            'RC522 Card Detected',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.green[700],
+                                            ),
+                                          ),
+                                          Text(
+                                            'ID: $_detectedCardId',
+                                            style: GoogleFonts.robotoMono(
+                                              fontSize: 12,
+                                              color: Colors.green[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
 
                             SizedBox(height: 32),
-                            // Simulate payment button
+
+                            // NFC Scan button
+                            if (!_isNfcReading && _detectedCardId == null)
+                              ElevatedButton(
+                                onPressed: _isNfcAvailable
+                                    ? () {
+                                        _startNFCScanning(
+                                          onPaymentSuccess: (success, amount) {
+                                            if (success) {
+                                              setSheetState(() {
+                                                isPaymentSuccessful = true;
+                                                transactionAmount = amount;
+                                              });
+                                            }
+                                          },
+                                        );
+                                      }
+                                    : null,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _isNfcAvailable
+                                      ? Colors.blue[600]
+                                      : Colors.grey[400],
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.nfc, size: 20),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      _isNfcAvailable
+                                          ? 'Scan RC522 Card'
+                                          : 'NFC Not Available',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                            // Stop scanning button
+                            if (_isNfcReading)
+                              ElevatedButton(
+                                onPressed: () {
+                                  _stopNFCScanning();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red[600],
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.stop, size: 20),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Stop Scanning',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                            SizedBox(height: 16),
+
+                            // Simulate payment button (fallback)
                             ElevatedButton(
                               onPressed: () {
                                 // Simulate a payment transaction
@@ -427,7 +735,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               child: Text(
-                                'Make Payment (\$25.00)',
+                                'Simulate Payment (\$25.00)',
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -561,6 +869,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _showGitHubSheet();
   }
 
+  // Open DigiSave GitHub page in app browser
+  void _openDigiSaveGitHub() {
+    print("Opening DigiSave GitHub in draggable sheet");
+    // Directly open the draggable scroll sheet
+    _showDigiSaveGitHubSheet();
+  }
+
   // Show GitHub in draggable scrollable sheet
   void _showGitHubSheet() {
     showModalBottomSheet(
@@ -660,6 +975,132 @@ class _HomeScreenState extends State<HomeScreen> {
                           // Open in external browser
                           final Uri uri =
                               Uri.parse('https://github.com/seeed-studio');
+                          try {
+                            await launchUrl(uri,
+                                mode: LaunchMode.externalApplication);
+                          } catch (e) {
+                            print('Error opening external browser: $e');
+                          }
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(4),
+                          child: Icon(Icons.open_in_new,
+                              color: Colors.blue, size: 18),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Add some bottom padding to prevent content from being too close to the edge
+              SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Show DigiSave GitHub in draggable scrollable sheet
+  void _showDigiSaveGitHubSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.3,
+        minChildSize: 0.2,
+        maxChildSize: 0.5,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10.0,
+                offset: Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar for dragging
+              Container(
+                width: 40,
+                height: 4,
+                margin: EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              // Header with title and close button
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Row(
+                  children: [
+                    Image.asset(
+                      'assets/icons/terminal.png',
+                      width: 30,
+                      height: 30,
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'My GitHub Repository',
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(Icons.close, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+
+              Divider(height: 1, color: Colors.grey[300]),
+
+              // URL address bar
+              Container(
+                padding: EdgeInsets.all(16),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/icons/github.png',
+                        width: 16,
+                        height: 16,
+                        color: const Color.fromARGB(255, 0, 0, 0),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'DigiSave Repository',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          // Open in external browser
+                          final Uri uri = Uri.parse(
+                              'https://github.com/edwards698/Seed-Studio-DigiSave');
                           try {
                             await launchUrl(uri,
                                 mode: LaunchMode.externalApplication);
@@ -1423,52 +1864,58 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Gym UI Library Card - Small
                   Expanded(
                     flex: 1,
-                    child: Container(
-                      height: 120,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Image.asset(
-                                'assets/icons/terminal.png',
-                                width: 20,
-                                height: 20,
-                                color: Colors.grey[700],
-                              ),
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: Colors.yellow,
-                                  shape: BoxShape.circle,
+                    child: GestureDetector(
+                      onTap: () {
+                        // Open DigiSave GitHub page in app browser
+                        _openDigiSaveGitHub();
+                      },
+                      child: Container(
+                        height: 120,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Image.asset(
+                                  'assets/icons/terminal.png',
+                                  width: 20,
+                                  height: 20,
+                                  color: Colors.grey[700],
                                 ),
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: Colors.yellow,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            Text(
+                              "My Library",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
                               ),
-                            ],
-                          ),
-                          const Spacer(),
-                          Text(
-                            "My Library",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
                             ),
-                          ),
-                          Text(
-                            "1 Items",
-                            style: GoogleFonts.poppins(
-                              fontSize: 10,
-                              color: Colors.grey[600],
+                            Text(
+                              "1 Items",
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                color: Colors.grey[600],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
