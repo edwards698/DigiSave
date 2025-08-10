@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class NotificationHistoryScreen extends StatefulWidget {
   final List<Map<String, String>> notifications;
@@ -12,7 +13,7 @@ class NotificationHistoryScreen extends StatefulWidget {
 }
 
 class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
-  String _selectedFilter = 'All'; // All, Mobile App, Terminal
+  String _selectedFilter = 'All'; // All, Mobile App, Wio Terminal
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +26,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
         final device = notification['device'] ?? '';
         return device == 'Mobile App';
       }).toList();
-    } else if (_selectedFilter == 'Terminal') {
+    } else if (_selectedFilter == 'Wio Terminal') {
       filteredNotifications = widget.notifications.where((notification) {
         final device = notification['device'] ?? '';
         // Any device that's not 'Mobile App' is considered terminal
@@ -69,12 +70,12 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                   const SizedBox(width: 8),
                   _buildFilterChip('Mobile App', Icons.smartphone),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Terminal', Icons.computer),
+                  _buildFilterChip('Wio Terminal', Icons.computer),
                 ],
               ),
             ),
           ),
-          const Divider(height: 1, color: Colors.grey),
+          Divider(height: 1, color: Colors.grey[300]),
           // Notifications list
           Expanded(
             child: Container(
@@ -85,7 +86,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                         _selectedFilter == 'All'
                             ? 'No notifications yet'
                             : 'No $_selectedFilter notifications',
-                        style: TextStyle(color: Colors.black),
+                        style: GoogleFonts.poppins(color: Colors.black),
                       ),
                     )
                   : ListView.builder(
@@ -111,14 +112,39 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                         String time = '';
                         final timeMatch =
                             RegExp(r'Time: ([^|]+)').firstMatch(body);
-                        if (timeMatch != null)
-                          time = timeMatch.group(1)?.trim() ?? '';
+                        if (timeMatch != null) {
+                          String rawTime = timeMatch.group(1)?.trim() ?? '';
+                          try {
+                            // Parse the ISO timestamp
+                            DateTime dateTime = DateTime.parse(rawTime);
+                            DateTime now = DateTime.now();
+
+                            // Calculate difference
+                            Duration difference = now.difference(dateTime);
+
+                            if (difference.inMinutes < 1) {
+                              time = 'Just now';
+                            } else if (difference.inMinutes < 60) {
+                              time = '${difference.inMinutes}m ago';
+                            } else if (difference.inHours < 24) {
+                              time = '${difference.inHours}h ago';
+                            } else if (difference.inDays < 7) {
+                              time = '${difference.inDays}d ago';
+                            } else {
+                              // Format as readable date for older timestamps
+                              time =
+                                  '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+                            }
+                          } catch (e) {
+                            // If parsing fails, show original time
+                            time = rawTime;
+                          }
+                        }
 
                         return ListTile(
                           tileColor: Colors.white,
                           leading: CircleAvatar(
-                            backgroundColor:
-                                const Color.fromARGB(0, 196, 25, 25),
+                            backgroundColor: Colors.grey[300]!.withOpacity(0.5),
                             radius: 20,
                             child: Image.asset(
                               deviceIcon,
@@ -129,8 +155,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                           ),
                           title: Text(
                             notification['title'] ?? '',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
+                            style: GoogleFonts.poppins(
                               color: Colors.black,
                             ),
                           ),
@@ -140,7 +165,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                               if (amount.isNotEmpty)
                                 Text(
                                   'Amount: \$$amount',
-                                  style: TextStyle(
+                                  style: GoogleFonts.poppins(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.black,
@@ -158,8 +183,8 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                                   child: Text(
                                     device == 'Mobile App'
                                         ? '📱 Mobile App'
-                                        : '💻 Terminal',
-                                    style: TextStyle(
+                                        : '💻 Wio Terminal',
+                                    style: GoogleFonts.poppins(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
                                         color: Colors.grey[600]),
@@ -170,7 +195,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                                   padding: EdgeInsets.only(top: 4),
                                   child: Text(
                                     'Time: $time',
-                                    style: TextStyle(
+                                    style: GoogleFonts.poppins(
                                       fontSize: 12,
                                       color: Colors.black,
                                     ),
@@ -213,7 +238,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
             const SizedBox(width: 4),
             Text(
               label,
-              style: TextStyle(
+              style: GoogleFonts.poppins(
                 color: isSelected ? Colors.white : Colors.grey[600],
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 fontSize: 12,

@@ -291,321 +291,261 @@ class _HomeScreenState extends State<HomeScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) => DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.5,
-          maxChildSize: 0.95,
-          builder: (context, scrollController) => Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10.0,
-                  offset: Offset(0, -2),
+        builder: (context, setSheetState) => Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10.0,
+                offset: Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Handle bar (optional - can be removed since it's now static)
+              Container(
+                width: 40,
+                height: 4,
+                margin: EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
                 ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // Handle bar
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                // Header
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  child: Row(
-                    children: [
-                      Image.asset(
-                        'assets/icons/nfc.png',
-                        width: 30,
-                        height: 30,
+              ),
+              // Header
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Row(
+                  children: [
+                    Image.asset(
+                      'assets/icons/seed.png',
+                      width: 30,
+                      height: 30,
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      isPaymentSuccessful
+                          ? 'Payment Successful!'
+                          : 'NFC Payment Wio Terminal',
+                      style: GoogleFonts.poppins(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: isPaymentSuccessful
+                            ? Colors.green[700]
+                            : Colors.black,
                       ),
-                      SizedBox(width: 12),
-                      Text(
-                        isPaymentSuccessful
-                            ? 'Payment Successful!'
-                            : 'NFC Payment Wio Terminal',
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: isPaymentSuccessful
-                              ? Colors.green[700]
-                              : Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                Divider(),
-                // Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    padding: EdgeInsets.all(20),
-                    child: !isPaymentSuccessful
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // NFC Status indicator
-                              Container(
-                                padding: EdgeInsets.all(20),
-                                child: Column(
-                                  children: [
-                                    // Lottie animation for NFC
-                                    Container(
-                                      width: 220,
-                                      height: 220,
-                                      child: Lottie.asset(
-                                        'assets/animations/nfc.json',
-                                        fit: BoxFit.contain,
-                                        repeat: true,
-                                        animate: true,
-                                      ),
+              ),
+              Divider(),
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(20),
+                  child: !isPaymentSuccessful
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // NFC Status indicator
+                            Container(
+                              padding: EdgeInsets.all(20),
+                              child: Column(
+                                children: [
+                                  // Lottie animation for NFC
+                                  Container(
+                                    width: 220,
+                                    height: 220,
+                                    child: Lottie.asset(
+                                      'assets/animations/nfc.json',
+                                      fit: BoxFit.contain,
+                                      repeat: true,
+                                      animate: true,
                                     ),
-                                    SizedBox(height: 12),
-                                    Text(
-                                      'Ready for NFC Payment',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.blue[800],
-                                      ),
+                                  ),
+                                  SizedBox(height: 12),
+                                  Text(
+                                    'Ready for NFC Payment',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.blue[800],
                                     ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      'Hold your device near the NFC terminal to make a payment',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 14,
-                                        color: Colors.grey[600],
-                                      ),
-                                      textAlign: TextAlign.center,
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Hold your device near the NFC terminal to make a payment',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
                                     ),
-                                  ],
-                                ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
                               ),
-                              SizedBox(height: 24),
-                              // Balance display
-                              Container(
-                                padding: EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
+                            ),
+
+                            SizedBox(height: 32),
+                            // Simulate payment button
+                            ElevatedButton(
+                              onPressed: () {
+                                // Simulate a payment transaction
+                                double paymentAmount =
+                                    25.0; // Example payment amount
+                                if (_fetchedBalance >= paymentAmount) {
+                                  setState(() {
+                                    _fetchedBalance -= paymentAmount;
+                                  });
+
+                                  // Add transaction to Firebase
+                                  _addTransactionToFirebase(
+                                      'withdrawal', paymentAmount);
+
+                                  // Update sheet state to show success
+                                  setSheetState(() {
+                                    isPaymentSuccessful = true;
+                                    transactionAmount = paymentAmount;
+                                  });
+                                } else {
+                                  // Show insufficient funds dialog
+                                  _showNotification('Payment Failed',
+                                      'Insufficient balance for payment.');
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green[600],
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Available Balance:',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 16,
-                                        color: Colors.grey[700],
-                                      ),
-                                    ),
-                                    Text(
-                                      '\$${_fetchedBalance.toStringAsFixed(2)}',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
                               ),
-                              SizedBox(height: 24),
-                              // Instructions
-                              Text(
-                                'How to use NFC Payment:',
+                              child: Text(
+                                'Make Payment (\$25.00)',
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.black,
                                 ),
                               ),
-                              SizedBox(height: 12),
-                              _buildInstructionStep(
-                                '1.',
-                                'Make sure NFC is enabled on your device',
-                                Icons.settings,
-                              ),
-                              _buildInstructionStep(
-                                '2.',
-                                'Hold your phone near the payment terminal',
-                                Icons.smartphone,
-                              ),
-                              _buildInstructionStep(
-                                '3.',
-                                'Wait for the payment confirmation',
-                                Icons.check_circle,
-                              ),
-                              SizedBox(height: 32),
-                              // Simulate payment button
-                              ElevatedButton(
-                                onPressed: () {
-                                  // Simulate a payment transaction
-                                  double paymentAmount =
-                                      25.0; // Example payment amount
-                                  if (_fetchedBalance >= paymentAmount) {
-                                    setState(() {
-                                      _fetchedBalance -= paymentAmount;
-                                    });
-
-                                    // Add transaction to Firebase
-                                    _addTransactionToFirebase(
-                                        'withdrawal', paymentAmount);
-
-                                    // Update sheet state to show success
-                                    setSheetState(() {
-                                      isPaymentSuccessful = true;
-                                      transactionAmount = paymentAmount;
-                                    });
-                                  } else {
-                                    // Show insufficient funds dialog
-                                    _showNotification('Payment Failed',
-                                        'Insufficient balance for payment.');
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green[600],
-                                  foregroundColor: Colors.white,
-                                  padding: EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Make Payment (\$25.00)',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                            ),
+                            SizedBox(height: 16),
+                            // Close button
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue[600],
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              SizedBox(height: 16),
-                              // Close button
-                              ElevatedButton(
-                                onPressed: () => Navigator.pop(context),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue[600],
-                                  foregroundColor: Colors.white,
-                                  padding: EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Close',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : Column(
-                            // Success view
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              SizedBox(height: 40),
-                              // Success animation
-                              Container(
-                                width: 150,
-                                height: 150,
-                                child: Lottie.asset(
-                                  'assets/animations/success_tick.json',
-                                  fit: BoxFit.contain,
-                                  repeat: false,
-                                  animate: true,
-                                ),
-                              ),
-                              SizedBox(height: 30),
-                              // Transaction details
-                              Text(
-                                'Payment of \$${transactionAmount.toStringAsFixed(2)}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'has been processed successfully',
+                              child: Text(
+                                'Close',
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
-                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                textAlign: TextAlign.center,
                               ),
-                              SizedBox(height: 30),
-                              // Balance info
-                              Container(
-                                padding: EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[50],
+                            ),
+                          ],
+                        )
+                      : Column(
+                          // Success view
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SizedBox(height: 40),
+                            // Success animation
+                            Container(
+                              width: 150,
+                              height: 150,
+                              child: Lottie.asset(
+                                'assets/animations/success_tick.json',
+                                fit: BoxFit.contain,
+                                repeat: false,
+                                animate: true,
+                              ),
+                            ),
+                            SizedBox(height: 30),
+                            // Transaction details
+                            Text(
+                              'Payment of \$${transactionAmount.toStringAsFixed(2)}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'has been processed successfully',
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 30),
+                            // Balance info
+                            Container(
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[50],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey[200]!),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'New Balance:',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                  Text(
+                                    '\$${_fetchedBalance.toStringAsFixed(2)}',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 40),
+                            // Done button
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green[600],
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.grey[200]!),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'New Balance:',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 16,
-                                        color: Colors.grey[700],
-                                      ),
-                                    ),
-                                    Text(
-                                      '\$${_fetchedBalance.toStringAsFixed(2)}',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green[600],
-                                      ),
-                                    ),
-                                  ],
                                 ),
                               ),
-                              SizedBox(height: 40),
-                              // Done button
-                              ElevatedButton(
-                                onPressed: () => Navigator.pop(context),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green[600],
-                                  foregroundColor: Colors.white,
-                                  padding: EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Done',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              child: Text(
+                                'Done',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ],
-                          ),
-                  ),
+                            ),
+                          ],
+                        ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -718,7 +658,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           : 'Withdrawal of \$${amount.toStringAsFixed(2)}',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
-                    fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
                   textAlign: TextAlign.center,
@@ -979,6 +918,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               const SizedBox(width: 8),
                               Image.asset(
                                 'assets/icons/master.png', // Path to local asset
+                                width: 32,
+                                height: 32,
+                              ),
+                              const SizedBox(width: 8),
+                              Image.asset(
+                                'assets/icons/seed.png', // Path to local asset
                                 width: 32,
                                 height: 32,
                               ),
