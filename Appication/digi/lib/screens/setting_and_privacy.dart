@@ -1,8 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class TerminalLibraryScreen extends StatelessWidget {
+class TerminalLibraryScreen extends StatefulWidget {
   const TerminalLibraryScreen({Key? key}) : super(key: key);
+
+  @override
+  State<TerminalLibraryScreen> createState() => _TerminalLibraryScreenState();
+}
+
+class _TerminalLibraryScreenState extends State<TerminalLibraryScreen> {
+  late ScrollController _scrollController;
+  bool _showTitle = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_scrollListener);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    if (_scrollController.offset > 50 && !_showTitle) {
+      setState(() {
+        _showTitle = true;
+      });
+    } else if (_scrollController.offset <= 50 && _showTitle) {
+      setState(() {
+        _showTitle = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,20 +49,45 @@ class TerminalLibraryScreen extends StatelessWidget {
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          'Settings',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
+        title: AnimatedOpacity(
+          opacity: _showTitle ? 1.0 : 0.0,
+          duration: Duration(milliseconds: 200),
+          child: Text(
+            'Settings and privacy',
+            style: GoogleFonts.poppins(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
           ),
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
+          controller: _scrollController,
           child: Column(
             children: [
               SizedBox(height: 16),
+
+              // Large Settings title that disappears when scrolling
+              AnimatedOpacity(
+                opacity: _showTitle ? 0.0 : 1.0,
+                duration: Duration(milliseconds: 200),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Settings and privacy',
+                      style: GoogleFonts.poppins(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
 
               // Account section
               _buildSectionHeader('Account'),
@@ -186,6 +245,11 @@ class TerminalLibraryScreen extends StatelessWidget {
           color: titleColor ?? Colors.black,
         ),
       ),
+      trailing: Icon(
+        Icons.arrow_forward_ios,
+        color: Colors.grey[400],
+        size: 16,
+      ),
       onTap: onTap,
     );
   }
@@ -193,7 +257,10 @@ class TerminalLibraryScreen extends StatelessWidget {
   void _showSnackBar(BuildContext context, String setting) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Opening $setting...'),
+        content: Text(
+          'Opening $setting...',
+          style: GoogleFonts.poppins(),
+        ),
         duration: Duration(seconds: 2),
       ),
     );
@@ -236,7 +303,10 @@ class TerminalLibraryScreen extends StatelessWidget {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Logged out successfully'),
+                    content: Text(
+                      'Logged out successfully',
+                      style: GoogleFonts.poppins(),
+                    ),
                     backgroundColor: Colors.green,
                   ),
                 );
@@ -297,7 +367,10 @@ class TerminalLibraryScreen extends StatelessWidget {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Account deletion cancelled'),
+                    content: Text(
+                      'Account deletion cancelled',
+                      style: GoogleFonts.poppins(),
+                    ),
                     backgroundColor: Colors.orange,
                   ),
                 );

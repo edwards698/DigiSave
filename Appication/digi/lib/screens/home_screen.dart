@@ -1,7 +1,7 @@
 import 'package:digi/screens/notification_history.dart';
 import 'package:flutter/material.dart';
 import 'package:digi/screens/bottom_navigation.dart';
-import 'package:digi/screens/terminal_library_screen.dart';
+import 'package:digi/screens/setting_and_privacy.dart';
 //Google fonts popins
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_database/firebase_database.dart';
