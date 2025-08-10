@@ -153,8 +153,11 @@ class _HomeScreenState extends State<HomeScreen> {
   // Balance fetched from Realtime Database
   double _fetchedBalance = 441.00; // Default balance
 
-  // NFC availability (keep this as it's used globally)
+  // NFC-related state variables
   bool _isNfcAvailable = false;
+  bool _isNfcReading = false;
+  String? _detectedCardId;
+  String _nfcStatus = 'Ready to scan';
 
 // Removed duplicate/stray Expanded widget and transaction list code that was outside the main widget tree.
 // Removed stray code block that was outside any function or widget.
@@ -193,10 +196,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    // Stop any running NFC session
-    NfcManager.instance.stopSession().catchError((e) {
-      print("Error stopping NFC session on dispose: $e");
-    });
+    // Stop NFC session if it's running
+    if (_isNfcReading) {
+      NfcManager.instance.stopSession();
+    }
     super.dispose();
   }
 
@@ -276,8 +279,16 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // Update status using callback
-    onStatusUpdate?.call('Scanning for RC522 card...', null, true);
+    // Update status using callback instead of setState to avoid flickering
+    if (onStatusUpdate != null) {
+      onStatusUpdate('Scanning for RC522 card...', null, true);
+    } else {
+      setState(() {
+        _isNfcReading = true;
+        _nfcStatus = 'Scanning for RC522 card...';
+        _detectedCardId = null;
+      });
+    }
 
     try {
       await NfcManager.instance.startSession(
@@ -287,14 +298,24 @@ class _HomeScreenState extends State<HomeScreen> {
           // Extract card UID for RC522 cards
           String? cardId = _extractCardId(tag);
 
-          // Update status using callback
-          onStatusUpdate?.call(
-            cardId != null
-                ? 'RC522 Card Detected: $cardId'
-                : 'Card detected but not RC522 compatible',
-            cardId,
-            false,
-          );
+          // Update status using callback to avoid setState conflicts
+          if (onStatusUpdate != null) {
+            onStatusUpdate(
+              cardId != null
+                  ? 'RC522 Card Detected: $cardId'
+                  : 'Card detected but not RC522 compatible',
+              cardId,
+              false,
+            );
+          } else {
+            setState(() {
+              _detectedCardId = cardId;
+              _nfcStatus = cardId != null
+                  ? 'RC522 Card Detected: $cardId'
+                  : 'Card detected but not RC522 compatible';
+              _isNfcReading = false;
+            });
+          }
 
           if (cardId != null) {
             _showNotification('RC522 Card Detected', 'Card ID: $cardId');
@@ -302,7 +323,9 @@ class _HomeScreenState extends State<HomeScreen> {
             double paymentAmount = await _processNFCPayment(cardId);
 
             // Call the success callback if provided
-            onPaymentSuccess?.call(paymentAmount > 0, paymentAmount);
+            if (onPaymentSuccess != null && paymentAmount > 0) {
+              onPaymentSuccess(true, paymentAmount);
+            }
           }
 
           // Stop NFC session after detection
@@ -311,7 +334,14 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     } catch (e) {
       print("Error during NFC scanning: $e");
-      onStatusUpdate?.call('Error scanning for NFC cards', null, false);
+      if (onStatusUpdate != null) {
+        onStatusUpdate('Error scanning for NFC cards', null, false);
+      } else {
+        setState(() {
+          _isNfcReading = false;
+          _nfcStatus = 'Error scanning for NFC cards';
+        });
+      }
       _showNotification('NFC Error', 'Failed to scan for NFC cards');
       await NfcManager.instance.stopSession();
     }
@@ -383,8 +413,9 @@ class _HomeScreenState extends State<HomeScreen> {
     double paymentAmount = 25.0; // Default payment amount
 
     if (_fetchedBalance >= paymentAmount) {
-      // Update balance directly without setState to avoid conflicts
-      _fetchedBalance -= paymentAmount;
+      setState(() {
+        _fetchedBalance -= paymentAmount;
+      });
 
       // Add transaction to Firebase
       _addTransactionToFirebase('withdrawal', paymentAmount);
@@ -404,7 +435,14 @@ class _HomeScreenState extends State<HomeScreen> {
       {Function(String, String?, bool)? onStatusUpdate}) async {
     try {
       await NfcManager.instance.stopSession();
-      onStatusUpdate?.call('NFC scanning stopped', null, false);
+      if (onStatusUpdate != null) {
+        onStatusUpdate('NFC scanning stopped', null, false);
+      } else {
+        setState(() {
+          _isNfcReading = false;
+          _nfcStatus = 'NFC scanning stopped';
+        });
+      }
     } catch (e) {
       print("Error stopping NFC session: $e");
     }
@@ -446,10 +484,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // Add transaction to Firebase Realtime Database
   void _addTransactionToFirebase(String type, double amount) {
     final dbRef = FirebaseDatabase.instance.ref('transactions');
-    final balanceRef = FirebaseDatabase.instance.ref('account/balance');
     final timestamp = DateTime.now().toIso8601String();
 
-    // Add transaction record
     dbRef.push().set({
       'amount': amount,
       'balanceAfter': _fetchedBalance,
@@ -461,14 +497,6 @@ class _HomeScreenState extends State<HomeScreen> {
           "Transaction added successfully: $type, \$${amount.toStringAsFixed(2)}");
     }).catchError((error) {
       print("Error adding transaction: $error");
-    });
-
-    // Update balance in Firebase to trigger UI update through listener
-    balanceRef.set(_fetchedBalance).then((_) {
-      print(
-          "Balance updated in Firebase: \$${_fetchedBalance.toStringAsFixed(2)}");
-    }).catchError((error) {
-      print("Error updating balance: $error");
     });
   }
 
@@ -567,7 +595,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Text(
                                     localIsNfcReading
                                         ? 'Scanning for RC522...'
-                                        : 'Ready for Wio Terminal Payment',
+                                        : 'Ready for RC522 Payment',
                                     style: GoogleFonts.poppins(
                                       fontSize: 24,
                                       fontWeight: FontWeight.w600,
@@ -669,7 +697,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     SizedBox(width: 8),
                                     Text(
                                       _isNfcAvailable
-                                          ? 'Make Payment'
+                                          ? 'Scan RC522 Card'
                                           : 'NFC Not Available',
                                       style: GoogleFonts.poppins(
                                         fontSize: 16,
@@ -718,11 +746,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                                 ),
                               ),
-
                             SizedBox(height: 16),
-
-                            // Simulate payment button (fallback)
-
                             // Close button
                             ElevatedButton(
                               onPressed: () => Navigator.pop(context),
