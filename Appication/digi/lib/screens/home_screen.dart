@@ -155,9 +155,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // NFC-related state variables
   bool _isNfcAvailable = false;
-  bool _isNfcReading = false;
-  String? _detectedCardId;
-  String _nfcStatus = 'Ready to scan';
 
 // Removed duplicate/stray Expanded widget and transaction list code that was outside the main widget tree.
 // Removed stray code block that was outside any function or widget.
@@ -196,9 +193,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    // Stop NFC session if it's running
-    if (_isNfcReading) {
+    // Stop NFC session if it's running (both manual and automatic)
+    try {
       NfcManager.instance.stopSession();
+    } catch (e) {
+      print("Error stopping NFC session in dispose: $e");
     }
     super.dispose();
   }
@@ -258,6 +257,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (isAvailable) {
         print("NFC is available on this device");
+        // Start automatic NFC scanning when app loads
+        _startAutomaticNFCScanning();
       } else {
         print("NFC is not available on this device");
       }
@@ -269,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Start NFC scanning for RC522 cards
+  // Start NFC scanning for RC522 cards (for manual use in sheets)
   void _startNFCScanning({
     Function(bool, double)? onPaymentSuccess,
     Function(String, String?, bool)? onStatusUpdate,
@@ -279,15 +280,9 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // Update status using callback instead of setState to avoid flickering
+    // Update status using callback
     if (onStatusUpdate != null) {
       onStatusUpdate('Scanning for RC522 card...', null, true);
-    } else {
-      setState(() {
-        _isNfcReading = true;
-        _nfcStatus = 'Scanning for RC522 card...';
-        _detectedCardId = null;
-      });
     }
 
     try {
@@ -298,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Extract card UID for RC522 cards
           String? cardId = _extractCardId(tag);
 
-          // Update status using callback to avoid setState conflicts
+          // Update status using callback
           if (onStatusUpdate != null) {
             onStatusUpdate(
               cardId != null
@@ -307,14 +302,6 @@ class _HomeScreenState extends State<HomeScreen> {
               cardId,
               false,
             );
-          } else {
-            setState(() {
-              _detectedCardId = cardId;
-              _nfcStatus = cardId != null
-                  ? 'RC522 Card Detected: $cardId'
-                  : 'Card detected but not RC522 compatible';
-              _isNfcReading = false;
-            });
           }
 
           if (cardId != null) {
@@ -336,11 +323,6 @@ class _HomeScreenState extends State<HomeScreen> {
       print("Error during NFC scanning: $e");
       if (onStatusUpdate != null) {
         onStatusUpdate('Error scanning for NFC cards', null, false);
-      } else {
-        setState(() {
-          _isNfcReading = false;
-          _nfcStatus = 'Error scanning for NFC cards';
-        });
       }
       _showNotification('NFC Error', 'Failed to scan for NFC cards');
       await NfcManager.instance.stopSession();
@@ -437,15 +419,738 @@ class _HomeScreenState extends State<HomeScreen> {
       await NfcManager.instance.stopSession();
       if (onStatusUpdate != null) {
         onStatusUpdate('NFC scanning stopped', null, false);
-      } else {
-        setState(() {
-          _isNfcReading = false;
-          _nfcStatus = 'NFC scanning stopped';
-        });
       }
     } catch (e) {
       print("Error stopping NFC session: $e");
     }
+  }
+
+  // Start automatic NFC scanning in background
+  void _startAutomaticNFCScanning() async {
+    if (!_isNfcAvailable) {
+      return;
+    }
+
+    try {
+      await NfcManager.instance.startSession(
+        onDiscovered: (NfcTag tag) async {
+          print("NFC tag detected automatically: ${tag.data}");
+
+          // Extract card UID for RC522 cards
+          String? cardId = _extractCardId(tag);
+
+          if (cardId != null) {
+            _showNotification('RC522 Card Detected', 'Card ID: $cardId');
+
+            // Stop current session before showing PIN sheet
+            await NfcManager.instance.stopSession();
+
+            // Show PIN entry draggable sheet
+            _showPINEntrySheet(cardId);
+          }
+        },
+      );
+    } catch (e) {
+      print("Error during automatic NFC scanning: $e");
+    }
+  }
+
+  // Show PIN entry draggable sheet when card is detected
+  void _showPINEntrySheet(String cardId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.9,
+        maxChildSize: 1.0,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10.0,
+                offset: Offset(0, -2),
+              ),
+            ],
+          ),
+          child: _buildPINEntryContent(cardId),
+        ),
+      ),
+    ).then((_) {
+      // Restart automatic NFC scanning when sheet is closed
+      Future.delayed(Duration(milliseconds: 500), () {
+        _startAutomaticNFCScanning();
+      });
+    });
+  }
+
+  // Build PIN entry content
+  Widget _buildPINEntryContent(String cardId) {
+    TextEditingController pinController = TextEditingController();
+    bool isProcessing = false;
+    String? pinError;
+    final String correctPin =
+        "1234"; // You can change this or make it configurable
+
+    return StatefulBuilder(
+      builder: (context, setSheetState) => Padding(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar for dragging
+            Container(
+              width: 40,
+              height: 4,
+              margin: EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+
+            // Header
+            Row(
+              children: [
+                Image.asset(
+                  'assets/icons/nfc.png',
+                  width: 30,
+                  height: 30,
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'RC522 Card Payment',
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.close, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+
+            Divider(),
+            SizedBox(height: 20),
+
+            // PIN entry section
+            Text(
+              'Enter PIN to Complete Payment',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: 20),
+
+            // PIN display field (read-only)
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: pinError != null ? Colors.red[50] : Colors.grey[50],
+                border: pinError != null
+                    ? Border.all(color: Colors.red[300]!, width: 1.5)
+                    : null,
+              ),
+              child: Text(
+                pinController.text.isEmpty
+                    ? '• • • •'
+                    : pinController.text.split('').map((char) => '•').join(' '),
+                style: GoogleFonts.poppins(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 8,
+                  color: pinError != null
+                      ? Colors.red[600]
+                      : pinController.text.isEmpty
+                          ? Colors.grey[400]
+                          : Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+
+            SizedBox(height: 20),
+
+            // Custom Number Pad
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  // Numbers 1-3
+                  Row(
+                    children: [
+                      Expanded(
+                          child: _buildNumberButton('1', pinController,
+                              setSheetState, pinError, () => pinError = null)),
+                      SizedBox(width: 12),
+                      Expanded(
+                          child: _buildNumberButton('2', pinController,
+                              setSheetState, pinError, () => pinError = null)),
+                      SizedBox(width: 12),
+                      Expanded(
+                          child: _buildNumberButton('3', pinController,
+                              setSheetState, pinError, () => pinError = null)),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  // Numbers 4-6
+                  Row(
+                    children: [
+                      Expanded(
+                          child: _buildNumberButton('4', pinController,
+                              setSheetState, pinError, () => pinError = null)),
+                      SizedBox(width: 12),
+                      Expanded(
+                          child: _buildNumberButton('5', pinController,
+                              setSheetState, pinError, () => pinError = null)),
+                      SizedBox(width: 12),
+                      Expanded(
+                          child: _buildNumberButton('6', pinController,
+                              setSheetState, pinError, () => pinError = null)),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  // Numbers 7-9
+                  Row(
+                    children: [
+                      Expanded(
+                          child: _buildNumberButton('7', pinController,
+                              setSheetState, pinError, () => pinError = null)),
+                      SizedBox(width: 12),
+                      Expanded(
+                          child: _buildNumberButton('8', pinController,
+                              setSheetState, pinError, () => pinError = null)),
+                      SizedBox(width: 12),
+                      Expanded(
+                          child: _buildNumberButton('9', pinController,
+                              setSheetState, pinError, () => pinError = null)),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  // 0 and Clear button row
+                  Row(
+                    children: [
+                      Expanded(child: Container()), // Empty space (column 1)
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: _buildNumberButton('0', pinController,
+                            setSheetState, pinError, () => pinError = null),
+                      ), // Column 2 (under 2, 5, 8)
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: _buildClearButton(pinController, setSheetState,
+                            () => pinError = null),
+                      ), // Column 3 (under 3, 6, 9)
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // PIN error message
+            if (pinError != null) ...[
+              SizedBox(height: 12),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red[200]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red[600], size: 20),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        pinError!,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.red[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            SizedBox(height: 30),
+
+            // Payment amount display
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Payment Amount:',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: const Color.fromARGB(255, 0, 0, 0),
+                    ),
+                  ),
+                  Text(
+                    '\$25.00',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: const Color.fromARGB(255, 0, 0, 0),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 20),
+
+            // Additional Action Buttons
+
+            // Main Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed:
+                        isProcessing ? null : () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[300],
+                      foregroundColor: Colors.black,
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.close, size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          'Cancel',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: isProcessing
+                        ? null
+                        : () async {
+                            String enteredPin = pinController.text.trim();
+
+                            // Validate PIN length
+                            if (enteredPin.length != 4) {
+                              setSheetState(() {
+                                pinError = 'PIN must be 4 digits';
+                              });
+                              return;
+                            }
+
+                            // Check if PIN is correct
+                            if (enteredPin != correctPin) {
+                              setSheetState(() {
+                                pinError = 'Incorrect PIN. Please try again.';
+                              });
+
+                              // Clear the PIN field for retry
+                              pinController.clear();
+                              return;
+                            }
+
+                            // PIN is correct, start processing
+                            setSheetState(() {
+                              isProcessing = true;
+                              pinError = null;
+                            });
+
+                            try {
+                              // Simulate processing delay
+                              await Future.delayed(Duration(seconds: 2));
+
+                              // Process the payment automatically
+                              double paymentAmount =
+                                  await _processNFCPayment(cardId);
+
+                              if (paymentAmount > 0) {
+                                // Close PIN sheet
+                                Navigator.pop(context);
+
+                                // Show success dialog
+                                _showPaymentSuccessDialog(
+                                    'payment', paymentAmount);
+                              } else {
+                                // Payment failed (insufficient balance)
+                                setSheetState(() {
+                                  isProcessing = false;
+                                  pinError =
+                                      'Payment failed: Insufficient balance';
+                                });
+                              }
+                            } catch (e) {
+                              // Handle any errors during payment processing
+                              setSheetState(() {
+                                isProcessing = false;
+                                pinError =
+                                    'Payment processing failed. Please try again.';
+                              });
+                              print("Error processing payment: $e");
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          isProcessing ? Colors.grey[400] : Colors.black,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: isProcessing
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Processing...',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.payment, size: 18),
+                              SizedBox(width: 8),
+                              Text(
+                                'Pay \$25.00',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ],
+            ),
+
+            SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build number buttons for PIN pad
+  Widget _buildNumberButton(String number, TextEditingController pinController,
+      Function setSheetState, String? pinError, Function() clearError) {
+    return GestureDetector(
+      onTap: () {
+        if (pinController.text.length < 4) {
+          pinController.text += number;
+          setSheetState(() {
+            // Clear error when user starts typing
+            clearError();
+          });
+        }
+      },
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            number,
+            style: GoogleFonts.poppins(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build clear button for PIN pad
+  Widget _buildClearButton(TextEditingController pinController,
+      Function setSheetState, Function() clearError) {
+    return GestureDetector(
+      onTap: () {
+        setSheetState(() {
+          if (pinController.text.isNotEmpty) {
+            pinController.text =
+                pinController.text.substring(0, pinController.text.length - 1);
+          } else {
+            // If PIN is empty, clear all to start fresh
+            pinController.clear();
+          }
+          // Clear error when user uses clear button
+          clearError();
+        });
+      },
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: Colors.red[50],
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Icon(
+            Icons.backspace_outlined,
+            color: Colors.red[600],
+            size: 24,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build quick amount selection buttons
+  Widget _buildQuickAmountButton(
+      String label, double amount, Function setSheetState) {
+    return GestureDetector(
+      onTap: () {
+        setSheetState(() {
+          // You can use this to update a selected amount variable if needed
+          // For now, it just provides visual feedback
+        });
+        _showNotification('Amount Selected', '$label selected for payment');
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.blue[50],
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue[200]!),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.blue[700],
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build payment type buttons
+  Widget _buildPaymentTypeButton(String label, IconData icon, Color color,
+      VoidCallback onTap, bool isProcessing) {
+    return GestureDetector(
+      onTap: isProcessing ? null : onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isProcessing ? Colors.grey[100] : color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isProcessing ? Colors.grey[300]! : color.withOpacity(0.3),
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isProcessing ? Colors.grey[400] : color,
+              size: 24,
+            ),
+            SizedBox(height: 8),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isProcessing ? Colors.grey[400] : color,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build action buttons
+  Widget _buildActionButton(String label, IconData icon, Color color,
+      VoidCallback onTap, bool isProcessing) {
+    return GestureDetector(
+      onTap: isProcessing ? null : onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isProcessing ? Colors.grey[100] : color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isProcessing ? Colors.grey[300]! : color.withOpacity(0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: isProcessing ? Colors.grey[400] : color,
+              size: 18,
+            ),
+            SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: isProcessing ? Colors.grey[400] : color,
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Handle Express Pay functionality
+  void _handleExpressPay(String cardId, TextEditingController pinController,
+      Function setSheetState, bool isProcessing) async {
+    if (isProcessing) return;
+
+    // Check if PIN is entered
+    if (pinController.text.trim().isEmpty) {
+      setSheetState(() {
+        // Show error that PIN is required
+      });
+      _showNotification('Express Pay', 'Please enter your PIN first');
+      return;
+    }
+
+    // Express pay with minimal validation
+    _showNotification('Express Pay', 'Processing express payment...');
+
+    // Simulate quick processing
+    await Future.delayed(Duration(milliseconds: 500));
+
+    double paymentAmount = await _processNFCPayment(cardId);
+    if (paymentAmount > 0) {
+      Navigator.pop(context);
+      _showPaymentSuccessDialog('payment', paymentAmount);
+    }
+  }
+
+  // Handle Secure Pay functionality
+  void _handleSecurePay(String cardId, TextEditingController pinController,
+      Function setSheetState, bool isProcessing) async {
+    if (isProcessing) return;
+
+    // More secure validation
+    String enteredPin = pinController.text.trim();
+    final String correctPin = "1234";
+
+    if (enteredPin.length != 4) {
+      _showNotification('Secure Pay', 'PIN must be 4 digits');
+      return;
+    }
+
+    if (enteredPin != correctPin) {
+      _showNotification('Secure Pay', 'Invalid PIN for secure payment');
+      pinController.clear();
+      return;
+    }
+
+    _showNotification('Secure Pay',
+        'Processing secure payment with additional verification...');
+
+    // Simulate secure processing with longer delay
+    await Future.delayed(Duration(seconds: 1));
+
+    double paymentAmount = await _processNFCPayment(cardId);
+    if (paymentAmount > 0) {
+      Navigator.pop(context);
+      _showPaymentSuccessDialog('payment', paymentAmount);
+    }
+  }
+
+  // Show balance information
+  void _showBalanceInfo(Function setSheetState) {
+    _showNotification('Account Balance',
+        'Current balance: \$${_fetchedBalance.toStringAsFixed(2)}');
+  }
+
+  // Show transaction history (simplified version)
+  void _showTransactionHistory() {
+    // Navigate to notifications tab to show transaction history
+    setState(() {
+      _selectedIndex = 1;
+    });
+    Navigator.pop(context);
+    _showNotification('Transaction History', 'Viewing recent transactions');
   }
 
   void _deposit(double amount) {
@@ -600,8 +1305,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       fontSize: 24,
                                       fontWeight: FontWeight.w600,
                                       color: localIsNfcReading
-                                          ? Colors.orange[800]
-                                          : Colors.blue[800],
+                                          ? const Color.fromARGB(
+                                              255, 99, 153, 247)
+                                          : const Color.fromARGB(255, 0, 0, 0),
                                     ),
                                   ),
                                   SizedBox(height: 8),
@@ -682,7 +1388,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     : null,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: _isNfcAvailable
-                                      ? Colors.blue[600]
+                                      ? const Color.fromARGB(255, 0, 0, 0)
                                       : Colors.grey[400],
                                   foregroundColor: Colors.white,
                                   padding: EdgeInsets.symmetric(vertical: 16),
@@ -751,9 +1457,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             ElevatedButton(
                               onPressed: () => Navigator.pop(context),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue[600],
-                                foregroundColor: Colors.white,
+                                backgroundColor: Colors.grey[300]!,
+                                foregroundColor: Colors.grey[600],
                                 padding: EdgeInsets.symmetric(vertical: 16),
+                                elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -1128,213 +1835,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  // Helper method to build info chips with icons
-  Widget _buildInfoChip(String icon, String text) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.blue[50],
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blue[200]!),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            icon,
-            style: TextStyle(fontSize: 14),
-          ),
-          SizedBox(width: 6),
-          Text(
-            text,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: Colors.blue[700],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Helper method to build repository cards
-  Widget _buildRepositoryCard(String name, String description, String language,
-      String stars, String forks) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.folder,
-                color: Colors.blue[600],
-                size: 16,
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  name,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.blue[700],
-                  ),
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Text(
-                  'Public',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 8),
-          Text(
-            description,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Colors.grey[700],
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(height: 12),
-          Row(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: _getLanguageColor(language),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              SizedBox(width: 6),
-              Text(
-                language,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
-              ),
-              SizedBox(width: 16),
-              Icon(Icons.star_outline, size: 14, color: Colors.grey[600]),
-              SizedBox(width: 4),
-              Text(
-                stars,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
-              ),
-              SizedBox(width: 16),
-              Icon(Icons.call_split, size: 14, color: Colors.grey[600]),
-              SizedBox(width: 4),
-              Text(
-                forks,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Helper method to build repository cards
-
-  // Helper method to get language colors
-  Color _getLanguageColor(String language) {
-    switch (language.toLowerCase()) {
-      case 'python':
-        return Colors.blue;
-      case 'c++':
-        return Colors.orange;
-      case 'javascript':
-        return Colors.yellow[700]!;
-      case 'documentation':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  // Helper method to build instruction steps
-
-  Widget _buildInstructionStep(
-      String number, String instruction, IconData icon) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: Colors.blue[100],
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Center(
-              child: Text(
-                number,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue[800],
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 12),
-          Icon(
-            icon,
-            size: 20,
-            color: Colors.grey[600],
-          ),
-          SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              instruction,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.grey[700],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
