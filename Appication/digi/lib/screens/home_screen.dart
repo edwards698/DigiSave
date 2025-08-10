@@ -153,11 +153,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // Balance fetched from Realtime Database
   double _fetchedBalance = 441.00; // Default balance
 
-  // NFC-related state variables
+  // NFC availability (keep this as it's used globally)
   bool _isNfcAvailable = false;
-  bool _isNfcReading = false;
-  String? _detectedCardId;
-  String _nfcStatus = 'Ready to scan';
 
 // Removed duplicate/stray Expanded widget and transaction list code that was outside the main widget tree.
 // Removed stray code block that was outside any function or widget.
@@ -196,10 +193,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    // Stop NFC session if it's running
-    if (_isNfcReading) {
-      NfcManager.instance.stopSession();
-    }
+    // Stop any running NFC session
+    NfcManager.instance.stopSession().catchError((e) {
+      print("Error stopping NFC session on dispose: $e");
+    });
     super.dispose();
   }
 
@@ -270,17 +267,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Start NFC scanning for RC522 cards
-  void _startNFCScanning({Function(bool, double)? onPaymentSuccess}) async {
+  void _startNFCScanning({
+    Function(bool, double)? onPaymentSuccess,
+    Function(String, String?, bool)? onStatusUpdate,
+  }) async {
     if (!_isNfcAvailable) {
       _showNotification('NFC Error', 'NFC is not available on this device');
       return;
     }
 
-    setState(() {
-      _isNfcReading = true;
-      _nfcStatus = 'Scanning for RC522 card...';
-      _detectedCardId = null;
-    });
+    // Update status using callback
+    onStatusUpdate?.call('Scanning for RC522 card...', null, true);
 
     try {
       await NfcManager.instance.startSession(
@@ -290,12 +287,14 @@ class _HomeScreenState extends State<HomeScreen> {
           // Extract card UID for RC522 cards
           String? cardId = _extractCardId(tag);
 
-          setState(() {
-            _detectedCardId = cardId;
-            _nfcStatus = cardId != null
+          // Update status using callback
+          onStatusUpdate?.call(
+            cardId != null
                 ? 'RC522 Card Detected: $cardId'
-                : 'Card detected but not RC522 compatible';
-          });
+                : 'Card detected but not RC522 compatible',
+            cardId,
+            false,
+          );
 
           if (cardId != null) {
             _showNotification('RC522 Card Detected', 'Card ID: $cardId');
@@ -303,24 +302,16 @@ class _HomeScreenState extends State<HomeScreen> {
             double paymentAmount = await _processNFCPayment(cardId);
 
             // Call the success callback if provided
-            if (onPaymentSuccess != null && paymentAmount > 0) {
-              onPaymentSuccess(true, paymentAmount);
-            }
+            onPaymentSuccess?.call(paymentAmount > 0, paymentAmount);
           }
 
           // Stop NFC session after detection
           await NfcManager.instance.stopSession();
-          setState(() {
-            _isNfcReading = false;
-          });
         },
       );
     } catch (e) {
       print("Error during NFC scanning: $e");
-      setState(() {
-        _isNfcReading = false;
-        _nfcStatus = 'Error scanning for NFC cards';
-      });
+      onStatusUpdate?.call('Error scanning for NFC cards', null, false);
       _showNotification('NFC Error', 'Failed to scan for NFC cards');
       await NfcManager.instance.stopSession();
     }
@@ -392,9 +383,8 @@ class _HomeScreenState extends State<HomeScreen> {
     double paymentAmount = 25.0; // Default payment amount
 
     if (_fetchedBalance >= paymentAmount) {
-      setState(() {
-        _fetchedBalance -= paymentAmount;
-      });
+      // Update balance directly without setState to avoid conflicts
+      _fetchedBalance -= paymentAmount;
 
       // Add transaction to Firebase
       _addTransactionToFirebase('withdrawal', paymentAmount);
@@ -410,13 +400,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Stop NFC scanning
-  void _stopNFCScanning() async {
+  void _stopNFCScanning(
+      {Function(String, String?, bool)? onStatusUpdate}) async {
     try {
       await NfcManager.instance.stopSession();
-      setState(() {
-        _isNfcReading = false;
-        _nfcStatus = 'NFC scanning stopped';
-      });
+      onStatusUpdate?.call('NFC scanning stopped', null, false);
     } catch (e) {
       print("Error stopping NFC session: $e");
     }
@@ -458,8 +446,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // Add transaction to Firebase Realtime Database
   void _addTransactionToFirebase(String type, double amount) {
     final dbRef = FirebaseDatabase.instance.ref('transactions');
+    final balanceRef = FirebaseDatabase.instance.ref('account/balance');
     final timestamp = DateTime.now().toIso8601String();
 
+    // Add transaction record
     dbRef.push().set({
       'amount': amount,
       'balanceAfter': _fetchedBalance,
@@ -472,12 +462,25 @@ class _HomeScreenState extends State<HomeScreen> {
     }).catchError((error) {
       print("Error adding transaction: $error");
     });
+
+    // Update balance in Firebase to trigger UI update through listener
+    balanceRef.set(_fetchedBalance).then((_) {
+      print(
+          "Balance updated in Firebase: \$${_fetchedBalance.toStringAsFixed(2)}");
+    }).catchError((error) {
+      print("Error updating balance: $error");
+    });
   }
 
   // Show NFC payment bottom sheet
   void _showNFCPaymentSheet() {
     bool isPaymentSuccessful = false;
     double transactionAmount = 0.0;
+
+    // Local state for the sheet to avoid setState conflicts
+    bool localIsNfcReading = false;
+    String localNfcStatus = 'Ready to scan';
+    String? localDetectedCardId;
 
     showModalBottomSheet(
       context: context,
@@ -556,33 +559,33 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: Lottie.asset(
                                       'assets/animations/nfc.json',
                                       fit: BoxFit.contain,
-                                      repeat: _isNfcReading,
-                                      animate: _isNfcReading,
+                                      repeat: localIsNfcReading,
+                                      animate: localIsNfcReading,
                                     ),
                                   ),
                                   SizedBox(height: 12),
                                   Text(
-                                    _isNfcReading
+                                    localIsNfcReading
                                         ? 'Scanning for RC522...'
-                                        : 'Ready for RC522 Payment',
+                                        : 'Ready for Wio Terminal Payment',
                                     style: GoogleFonts.poppins(
                                       fontSize: 24,
                                       fontWeight: FontWeight.w600,
-                                      color: _isNfcReading
+                                      color: localIsNfcReading
                                           ? Colors.orange[800]
                                           : Colors.blue[800],
                                     ),
                                   ),
                                   SizedBox(height: 8),
                                   Text(
-                                    _nfcStatus,
+                                    localNfcStatus,
                                     style: GoogleFonts.poppins(
                                       fontSize: 14,
                                       color: Colors.grey[600],
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
-                                  if (_detectedCardId != null) ...[
+                                  if (localDetectedCardId != null) ...[
                                     SizedBox(height: 12),
                                     Container(
                                       padding: EdgeInsets.all(12),
@@ -607,7 +610,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                           ),
                                           Text(
-                                            'ID: $_detectedCardId',
+                                            'ID: $localDetectedCardId',
                                             style: GoogleFonts.robotoMono(
                                               fontSize: 12,
                                               color: Colors.green[600],
@@ -624,7 +627,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             SizedBox(height: 32),
 
                             // NFC Scan button
-                            if (!_isNfcReading && _detectedCardId == null)
+                            if (!localIsNfcReading &&
+                                localDetectedCardId == null)
                               ElevatedButton(
                                 onPressed: _isNfcAvailable
                                     ? () {
@@ -636,6 +640,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 transactionAmount = amount;
                                               });
                                             }
+                                          },
+                                          onStatusUpdate:
+                                              (status, cardId, isReading) {
+                                            setSheetState(() {
+                                              localNfcStatus = status;
+                                              localDetectedCardId = cardId;
+                                              localIsNfcReading = isReading;
+                                            });
                                           },
                                         );
                                       }
@@ -657,7 +669,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     SizedBox(width: 8),
                                     Text(
                                       _isNfcAvailable
-                                          ? 'Scan RC522 Card'
+                                          ? 'Make Payment'
                                           : 'NFC Not Available',
                                       style: GoogleFonts.poppins(
                                         fontSize: 16,
@@ -669,10 +681,19 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
 
                             // Stop scanning button
-                            if (_isNfcReading)
+                            if (localIsNfcReading)
                               ElevatedButton(
                                 onPressed: () {
-                                  _stopNFCScanning();
+                                  _stopNFCScanning(
+                                    onStatusUpdate:
+                                        (status, cardId, isReading) {
+                                      setSheetState(() {
+                                        localNfcStatus = status;
+                                        localDetectedCardId = cardId;
+                                        localIsNfcReading = isReading;
+                                      });
+                                    },
+                                  );
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red[600],
@@ -701,48 +722,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             SizedBox(height: 16),
 
                             // Simulate payment button (fallback)
-                            ElevatedButton(
-                              onPressed: () {
-                                // Simulate a payment transaction
-                                double paymentAmount =
-                                    25.0; // Example payment amount
-                                if (_fetchedBalance >= paymentAmount) {
-                                  setState(() {
-                                    _fetchedBalance -= paymentAmount;
-                                  });
 
-                                  // Add transaction to Firebase
-                                  _addTransactionToFirebase(
-                                      'withdrawal', paymentAmount);
-
-                                  // Update sheet state to show success
-                                  setSheetState(() {
-                                    isPaymentSuccessful = true;
-                                    transactionAmount = paymentAmount;
-                                  });
-                                } else {
-                                  // Show insufficient funds dialog
-                                  _showNotification('Payment Failed',
-                                      'Insufficient balance for payment.');
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green[600],
-                                foregroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Text(
-                                'Simulate Payment (\$25.00)',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 16),
                             // Close button
                             ElevatedButton(
                               onPressed: () => Navigator.pop(context),
@@ -1761,7 +1741,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(width: 8), // Space between icon and text
                         Text(
-                          "NFC",
+                          "Deposit",
                           style: GoogleFonts.poppins(color: Colors.black),
                         ),
                       ],
