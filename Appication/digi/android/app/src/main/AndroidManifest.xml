@@ -1,6 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.example.digi"> <!-- Replace with your actual package name -->
 
+    <!-- Internet permission for network requests -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- Permission to query for web browsers -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
     <application
         android:label="Digi-Save"
         android:name="${applicationName}"
@@ -47,6 +53,17 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        
+        <!-- Query for web browsers to handle URLs -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="http" />
         </intent>
     </queries>
 </manifest>

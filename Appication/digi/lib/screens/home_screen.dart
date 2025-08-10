@@ -1,11 +1,13 @@
 import 'package:digi/screens/notification_history.dart';
 import 'package:flutter/material.dart';
 import 'package:digi/screens/bottom_navigation.dart';
+import 'package:digi/screens/terminal_library_screen.dart';
 //Google fonts popins
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:lottie/lottie.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // Add your HomeScreen StatefulWidget here
 class HomeScreen extends StatefulWidget {
@@ -552,7 +554,301 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Open Seeed Studio GitHub page in app browser
+  void _openSeedStudioGitHub() {
+    print("Opening GitHub in draggable sheet");
+    // Directly open the draggable scroll sheet
+    _showGitHubSheet();
+  }
+
+  // Show GitHub in draggable scrollable sheet
+  void _showGitHubSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.3,
+        minChildSize: 0.2,
+        maxChildSize: 0.5,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10.0,
+                offset: Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar for dragging
+              Container(
+                width: 40,
+                height: 4,
+                margin: EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              // Header with title and close button
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Row(
+                  children: [
+                    Image.asset(
+                      'assets/icons/seed.png',
+                      width: 30,
+                      height: 30,
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Seeed Studio GitHub',
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(Icons.close, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+
+              Divider(height: 1, color: Colors.grey[300]),
+
+              // URL address bar
+              Container(
+                padding: EdgeInsets.all(16),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/icons/github.png',
+                        width: 16,
+                        height: 16,
+                        color: const Color.fromARGB(255, 0, 0, 0),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'GitHub',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          // Open in external browser
+                          final Uri uri =
+                              Uri.parse('https://github.com/seeed-studio');
+                          try {
+                            await launchUrl(uri,
+                                mode: LaunchMode.externalApplication);
+                          } catch (e) {
+                            print('Error opening external browser: $e');
+                          }
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(4),
+                          child: Icon(Icons.open_in_new,
+                              color: Colors.blue, size: 18),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Add some bottom padding to prevent content from being too close to the edge
+              SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build info chips with icons
+  Widget _buildInfoChip(String icon, String text) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.blue[200]!),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            icon,
+            style: TextStyle(fontSize: 14),
+          ),
+          SizedBox(width: 6),
+          Text(
+            text,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: Colors.blue[700],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method to build repository cards
+  Widget _buildRepositoryCard(String name, String description, String language,
+      String stars, String forks) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.folder,
+                color: Colors.blue[600],
+                size: 16,
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  name,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue[700],
+                  ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Text(
+                  'Public',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          Text(
+            description,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: Colors.grey[700],
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: _getLanguageColor(language),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              SizedBox(width: 6),
+              Text(
+                language,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+              SizedBox(width: 16),
+              Icon(Icons.star_outline, size: 14, color: Colors.grey[600]),
+              SizedBox(width: 4),
+              Text(
+                stars,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+              SizedBox(width: 16),
+              Icon(Icons.call_split, size: 14, color: Colors.grey[600]),
+              SizedBox(width: 4),
+              Text(
+                forks,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method to build repository cards
+
+  // Helper method to get language colors
+  Color _getLanguageColor(String language) {
+    switch (language.toLowerCase()) {
+      case 'python':
+        return Colors.blue;
+      case 'c++':
+        return Colors.orange;
+      case 'javascript':
+        return Colors.yellow[700]!;
+      case 'documentation':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
   // Helper method to build instruction steps
+
   Widget _buildInstructionStep(
       String number, String instruction, IconData icon) {
     return Padding(
@@ -1017,48 +1313,264 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              const Divider(),
-              Text(
-                "Recent transactions",
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  //fontStyle: FontStyle.italic,
-                  color: Colors.grey,
-                ),
+              // Library Section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Library",
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      // Navigate to full library screen
+                    },
+                    child: Text(
+                      "View All",
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-              // Display the list of transactions (limited to 4 most recent)
-              _transactions.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No transactions yet.',
-                        style: GoogleFonts.poppins(
-                          color: Colors.grey,
-                          fontSize: 16,
+              const SizedBox(height: 16),
+              // Library Cards Grid
+              Row(
+                children: [
+                  // Meeting App Card - Large
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      height: 120,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[200],
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Image.asset(
+                                'assets/icons/video.png',
+                                width: 24,
+                                height: 24,
+                                color: Colors.orange[800],
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  "New",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.orange[800],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          Text(
+                            "Security App",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Text(
+                            "32 Items",
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Gym UI Library Card - Small
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      height: 120,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Image.asset(
+                                'assets/icons/terminal.png',
+                                width: 20,
+                                height: 20,
+                                color: Colors.grey[700],
+                              ),
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: Colors.yellow,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          Text(
+                            "Terminal Library",
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Text(
+                            "15 Items",
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Second Row of Library Cards
+              Row(
+                children: [
+                  // Education Card - Small
+                  Expanded(
+                    flex: 1,
+                    child: GestureDetector(
+                      onTap: () {
+                        // Open Seeed Studio GitHub page in app browser
+                        _openSeedStudioGitHub();
+                      },
+                      child: Container(
+                        height: 100,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Image.asset(
+                                  'assets/icons/seed.png',
+                                  width: 20,
+                                  height: 20,
+                                  color: Colors.grey[700],
+                                ),
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: Colors.yellow,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            Text(
+                              "Seed Studio\nOpen Source",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    )
-                  : Column(
-                      children: _transactions
-                          .take(
-                              4) // Only show the first 4 transactions (newest first)
-                          .map((tx) => TransactionItem(
-                                icon: tx['type'] == 'deposit'
-                                    ? Icons.arrow_downward
-                                    : Icons.arrow_upward,
-                                title: tx['type'] == 'deposit'
-                                    ? 'Deposit'
-                                    : 'Withdrawal',
-                                subtitle:
-                                    'Device: ${tx['device']} | Time: ${tx['timestamp']}',
-                                amount: '\$${tx['amount'].toString()}',
-                                iconColor: tx['type'] == 'deposit'
-                                    ? Colors.green
-                                    : Colors.red,
-                                device: tx['device'], // Pass device information
-                              ))
-                          .toList(),
                     ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Task Manager Card - Small
+                  Expanded(
+                    flex: 1,
+                    child: GestureDetector(
+                      onTap: () {
+                        // Navigate to Terminal Library Screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TerminalLibraryScreen(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        height: 100,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Icon(
+                                  Icons.task_alt,
+                                  color: Colors.grey[700],
+                                  size: 20,
+                                ),
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: Colors.yellow,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            Text(
+                              "Seed Terminal",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
