@@ -23,6 +23,7 @@ dependencies:
   url_launcher: ^6.1.14
   nfc_manager: ^3.4.0
   ndef: ^0.3.1
+  http: ^1.0.0
 
 dev_dependencies:
   flutter_test:

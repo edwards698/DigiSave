@@ -2,6 +2,7 @@ import 'package:digi/screens/notification_history.dart';
 import 'package:flutter/material.dart';
 import 'package:digi/screens/bottom_navigation.dart';
 import 'package:digi/screens/setting_and_privacy.dart';
+import 'package:digi/screens/security_screen.dart';
 //Google fonts popins
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -805,10 +806,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               if (paymentAmount > 0) {
                                 // Close PIN sheet
                                 Navigator.pop(context);
-
-                                // Show success dialog
-                                _showPaymentSuccessDialog(
-                                    'payment', paymentAmount);
                               } else {
                                 // Payment failed (insufficient balance)
                                 setSheetState(() {
@@ -1100,7 +1097,6 @@ class _HomeScreenState extends State<HomeScreen> {
     double paymentAmount = await _processNFCPayment(cardId);
     if (paymentAmount > 0) {
       Navigator.pop(context);
-      _showPaymentSuccessDialog('payment', paymentAmount);
     }
   }
 
@@ -1133,7 +1129,6 @@ class _HomeScreenState extends State<HomeScreen> {
     double paymentAmount = await _processNFCPayment(cardId);
     if (paymentAmount > 0) {
       Navigator.pop(context);
-      _showPaymentSuccessDialog('payment', paymentAmount);
     }
   }
 
@@ -1162,9 +1157,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Add transaction to Firebase
     _addTransactionToFirebase('deposit', amount);
-
-    // Show success dialog
-    _showPaymentSuccessDialog('deposit', amount);
   }
 
   void _withdraw(double amount) {
@@ -1177,9 +1169,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // Add transaction to Firebase
       _addTransactionToFirebase('withdrawal', amount);
-
-      // Show success dialog
-      _showPaymentSuccessDialog('withdrawal', amount);
     } else {
       _showNotification(
           'Withdrawal Failed', 'Insufficient balance for withdrawal.');
@@ -1839,144 +1828,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Show payment success dialog
-  void _showPaymentSuccessDialog(String transactionType, double amount) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          elevation: 10,
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10.0,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Success animation/icon
-                Container(
-                  width: 100,
-                  height: 100,
-                  child: Lottie.asset(
-                    'assets/animations/success_tick.json',
-                    fit: BoxFit.contain,
-                    repeat: false,
-                    animate: true,
-                  ),
-                ),
-                SizedBox(height: 20),
-                // Success title
-                Text(
-                  'Payment Successful!',
-                  style: GoogleFonts.poppins(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green[700],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 12),
-                // Transaction details
-                Text(
-                  transactionType == 'deposit'
-                      ? 'Deposit of \$${amount.toStringAsFixed(2)}'
-                      : transactionType == 'payment'
-                          ? 'Payment of \$${amount.toStringAsFixed(2)}'
-                          : 'Withdrawal of \$${amount.toStringAsFixed(2)}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    color: Colors.black87,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'has been processed successfully',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 20),
-                // Balance info
-                Container(
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[200]!),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'New Balance:',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                      Text(
-                        '\$${_fetchedBalance.toStringAsFixed(2)}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 24),
-                // Close button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Close success dialog
-                      Navigator.of(context).pop(); // Close NFC sheet if open
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[600],
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                    ),
-                    child: Text(
-                      'Done',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     // Show NotificationHistoryScreen if Notifications tab is selected
@@ -2304,63 +2155,74 @@ class _HomeScreenState extends State<HomeScreen> {
               // Library Cards Grid
               Row(
                 children: [
-                  // Meeting App Card - Large
+                  // Security App Card - Large
                   Expanded(
                     flex: 2,
-                    child: Container(
-                      height: 120,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.orange[200],
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Image.asset(
-                                'assets/icons/video.png',
-                                width: 24,
-                                height: 24,
-                                color: Colors.orange[800],
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
+                    child: GestureDetector(
+                      onTap: () {
+                        // Navigate to Security Screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SecurityScreen(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        height: 120,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.orange[200],
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Image.asset(
+                                  'assets/icons/video.png',
+                                  width: 24,
+                                  height: 24,
+                                  color: Colors.orange[800],
                                 ),
-                                child: Text(
-                                  "New",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.orange[800],
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    "New",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.orange[800],
+                                    ),
                                   ),
                                 ),
+                              ],
+                            ),
+                            const Spacer(),
+                            Text(
+                              "Security App",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
                               ),
-                            ],
-                          ),
-                          const Spacer(),
-                          Text(
-                            "Security App",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
                             ),
-                          ),
-                          Text(
-                            "32 Items",
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Colors.grey[600],
+                            Text(
+                              "32 Items",
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
