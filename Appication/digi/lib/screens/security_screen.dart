@@ -1,5 +1,240 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
+import 'dart:async';
+
+// Custom MJPEG Stream Widget
+class MjpegView extends StatefulWidget {
+  final String streamUrl;
+  final BoxFit fit;
+
+  const MjpegView({
+    Key? key,
+    required this.streamUrl,
+    this.fit = BoxFit.cover,
+  }) : super(key: key);
+
+  @override
+  _MjpegViewState createState() => _MjpegViewState();
+}
+
+class _MjpegViewState extends State<MjpegView> {
+  Uint8List? _currentFrame;
+  bool _isLoading = true;
+  bool _hasError = false;
+  StreamSubscription? _streamSubscription;
+  http.Client? _httpClient;
+  @override
+  void initState() {
+    super.initState();
+    _startStream();
+  }
+
+  @override
+  void dispose() {
+    _stopStream();
+    super.dispose();
+  }
+
+  void _startStream() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _hasError = false;
+      });
+
+      _httpClient = http.Client();
+      final request = http.Request('GET', Uri.parse(widget.streamUrl));
+      final response = await _httpClient!.send(request);
+
+      if (response.statusCode == 200) {
+        _streamSubscription = response.stream.listen(
+          _processStreamData,
+          onError: (error) {
+            setState(() {
+              _hasError = true;
+              _isLoading = false;
+            });
+          },
+          onDone: () {
+            setState(() {
+              _hasError = true;
+              _isLoading = false;
+            });
+          },
+        );
+      } else {
+        setState(() {
+          _hasError = true;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _hasError = true;
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<int> _buffer = [];
+  void _processStreamData(List<int> data) {
+    _buffer.addAll(data);
+
+    // Look for JPEG start and end markers
+    while (_buffer.length > 4) {
+      // Find JPEG start (FF D8)
+      int startIndex = -1;
+      for (int i = 0; i < _buffer.length - 1; i++) {
+        if (_buffer[i] == 0xFF && _buffer[i + 1] == 0xD8) {
+          startIndex = i;
+          break;
+        }
+      }
+
+      if (startIndex == -1) {
+        _buffer.clear();
+        break;
+      }
+
+      // Find JPEG end (FF D9)
+      int endIndex = -1;
+      for (int i = startIndex + 2; i < _buffer.length - 1; i++) {
+        if (_buffer[i] == 0xFF && _buffer[i + 1] == 0xD9) {
+          endIndex = i + 1;
+          break;
+        }
+      }
+
+      if (endIndex == -1) {
+        // Remove data before start marker
+        _buffer = _buffer.sublist(startIndex);
+        break;
+      }
+
+      // Extract complete JPEG frame
+      final frameData = _buffer.sublist(startIndex, endIndex + 1);
+      _buffer = _buffer.sublist(endIndex + 1);
+
+      // Update UI with new frame
+      if (mounted) {
+        final frameBytes = Uint8List.fromList(frameData);
+        setState(() {
+          _currentFrame = frameBytes;
+          _isLoading = false;
+          _hasError = false;
+        });
+      }
+    }
+  }
+
+  void _stopStream() {
+    _streamSubscription?.cancel();
+    _httpClient?.close();
+    _streamSubscription = null;
+    _httpClient = null;
+  }
+
+  void _retry() {
+    _stopStream();
+    _startStream();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hasError) {
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.black,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.camera_alt_outlined,
+              color: Colors.white,
+              size: 48,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Camera Offline',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Check ESP32 connection',
+              style: GoogleFonts.poppins(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'URL: ${widget.streamUrl}',
+              style: GoogleFonts.poppins(
+                color: Colors.white60,
+                fontSize: 10,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _retry,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Retry',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_isLoading || _currentFrame == null) {
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.black,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: Colors.white,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Connecting to camera...',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Image.memory(
+      _currentFrame!,
+      fit: widget.fit,
+      gaplessPlayback: true,
+    );
+  }
+}
 
 class SecurityScreen extends StatefulWidget {
   @override
@@ -26,7 +261,8 @@ class _SecurityScreenState extends State<SecurityScreen> {
   ];
 
   // ESP32 Camera stream URL - update this with your XIAO ESP32S3's IP address
-  String cameraStreamUrl = 'http://192.168.1.50/stream';
+  // Replace 192.168.1.50 with your ESP32's actual IP from Serial Monitor
+  String cameraStreamUrl = 'http://192.168.100.28/stream';
 
   void _showRoomSelection() {
     showModalBottomSheet(
@@ -378,7 +614,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                   ),
                   Expanded(
                     child: Text(
-                      'CAMERAS',
+                      'XIAO ESP32S3',
                       style: GoogleFonts.poppins(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -410,78 +646,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
                       Container(
                         width: double.infinity,
                         height: double.infinity,
-                        child: Image.network(
-                          cameraStreamUrl,
+                        child: MjpegView(
+                          streamUrl: cameraStreamUrl,
                           fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) {
-                              return child;
-                            }
-                            return Container(
-                              width: double.infinity,
-                              height: double.infinity,
-                              color: Colors.black,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CircularProgressIndicator(
-                                    color: Colors.white,
-                                  ),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    'Connecting to camera...',
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              width: double.infinity,
-                              height: double.infinity,
-                              color: Colors.black,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.camera_alt_outlined,
-                                    color: Colors.white,
-                                    size: 48,
-                                  ),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    'Camera Offline',
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    'Check ESP32 connection',
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white70,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    'URL: $cameraStreamUrl',
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white60,
-                                      fontSize: 10,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
                         ),
                       ),
 
